@@ -27,6 +27,9 @@ defmodule Callisto.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{ :inflex, "~> 1.7.0" }]
+    [
+      {:inflex, "~> 1.7.0"},
+      {:uuid, "~> 1.1"},
+    ]
   end
 end
