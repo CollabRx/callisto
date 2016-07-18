@@ -32,7 +32,6 @@ defmodule Callisto.CypherableTest do
       edge = Callisto.Edge.cast(%{}, from_vertex, to_vertex, relationship: HasMedicine)
 
       {:ok, cypher} = Cypherable.to_cypher(edge)
-      IO.puts cypher
       assert is_binary(cypher)
     end
   end
