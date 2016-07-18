@@ -1,6 +1,6 @@
 # Callisto
 
-**TODO: Add description**
+An Elixir library for managing graph database records with Cypher.
 
 ## Installation
 
