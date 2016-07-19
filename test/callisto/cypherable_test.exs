@@ -24,12 +24,7 @@ defmodule Callisto.CypherableTest do
 
   describe "for edge" do
     test "returns string for edge" do
-      medicine_attributes = %{name: "Lemon Peel"}
-      treatment_attributes = %{name: "Yelling"}
-
-      from_vertex = Callisto.Vertex.cast(treatment_attributes, labels: [Treatment])
-      to_vertex = Callisto.Vertex.cast(medicine_attributes, labels: [Medicine])
-      edge = Callisto.Edge.cast(%{}, from_vertex, to_vertex, relationship: HasMedicine)
+      edge = Callisto.Edge.new(HasMedicine)
 
       {:ok, cypher} = Cypherable.to_cypher(edge)
       assert is_binary(cypher)
@@ -40,7 +35,7 @@ defmodule Callisto.CypherableTest do
     setup do
       v1 = Callisto.Vertex.cast(%{name: "Foo"}, labels: [Treatment])
       v2 = Callisto.Vertex.cast(%{name: "Bar"}, labels: [Medicine])
-      e = Callisto.Edge.cast(%{}, v1, v2, relationship: HasMedicine)
+      e = Callisto.Edge.new(HasMedicine)
       {:ok, v1: v1, v2: v2, e: e, 
             triple: %Callisto.Triple{from: v1, to: v2, edge: e} }
     end

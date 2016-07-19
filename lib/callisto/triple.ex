@@ -3,6 +3,7 @@ defmodule Callisto.Triple do
   Defines macros for properties and relationship for an edge linking to vertices
   """
   defstruct from: nil, to: nil, edge: nil
+
 end
 
 defimpl Callisto.Cypherable, for: Callisto.Triple do

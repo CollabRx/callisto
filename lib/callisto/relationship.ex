@@ -23,14 +23,7 @@ defmodule Callisto.Relationship do
     end
   end
 
-  defmacro field(name, type) do
-    options = [type: type]
-    quote do
-      Module.put_attribute(__MODULE__, :callisto_relationship_properties, {unquote(name), unquote(options)})
-    end
-  end
-
-  defmacro field(name, type, options) do
+  defmacro field(name, type, options \\ []) do
     options = [type: type] ++ options
     quote do
       Module.put_attribute(__MODULE__, :callisto_relationship_properties, {unquote(name), unquote(options)})
