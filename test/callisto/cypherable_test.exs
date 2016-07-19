@@ -51,6 +51,7 @@ defmodule Callisto.CypherableTest do
       assert to_string(t) == "(v1:Treatment {dose: 50, duration: 1, name: \"Foo\"})-[r:has_medicine {}]->(v2:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Bar\"})"
       assert to_string(t) == Cypherable.to_cypher!(t)
       assert Cypherable.to_cypher!(t, ["from", "edge", "to"]) == "(from:Treatment {dose: 50, duration: 1, name: \"Foo\"})-[edge:has_medicine {}]->(to:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Bar\"})"
+      assert Cypherable.to_cypher!(t, from: "from", edge: "edge", to: "to") == "(from:Treatment {dose: 50, duration: 1, name: \"Foo\"})-[edge:has_medicine {}]->(to:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Bar\"})"
     end
   end
 end
