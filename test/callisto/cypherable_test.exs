@@ -15,9 +15,9 @@ defmodule Callisto.CypherableTest do
       attributes = %{name: "Strawberry"}
       labels = [Medicine]
       vertex = Callisto.Vertex.cast(attributes, labels: labels)
-      # {:ok, "(vertex:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Strawberry\"})"}
+      # {:ok, "(x:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Strawberry\"})"}
       {:ok, cypher} = Cypherable.to_cypher(vertex)
-      "(vertex:Medicine " <> tail = cypher
+      "(x:Medicine " <> tail = cypher
       assert String.contains?(tail, "name: \"Strawberry\"")
     end
   end
@@ -33,6 +33,29 @@ defmodule Callisto.CypherableTest do
 
       {:ok, cypher} = Cypherable.to_cypher(edge)
       assert is_binary(cypher)
+    end
+  end
+
+  describe "to_string" do
+    setup do
+      v1 = Callisto.Vertex.cast(%{name: "Foo"}, labels: [Treatment])
+      v2 = Callisto.Vertex.cast(%{name: "Bar"}, labels: [Medicine])
+      e = Callisto.Edge.cast(%{}, v1, v2, relationship: HasMedicine)
+      {:ok, v1: v1, v2: v2, e: e, 
+            triple: %Callisto.Triple{from: v1, to: v2, edge: e} }
+    end
+    test "vertex", %{v1: v} do
+      assert to_string(v) == "(x:Treatment {dose: 50, duration: 1, name: \"Foo\"})"
+    end
+
+    test "edge", %{e: e} do
+      assert to_string(e) == "[x:has_medicine {}]"
+    end
+
+    test "triple", %{triple: t} do
+      assert to_string(t) == "(v1:Treatment {dose: 50, duration: 1, name: \"Foo\"})-[r:has_medicine {}]->(v2:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Bar\"})"
+      assert to_string(t) == Cypherable.to_cypher!(t)
+      assert Cypherable.to_cypher!(t, ["from", "edge", "to"]) == "(from:Treatment {dose: 50, duration: 1, name: \"Foo\"})-[edge:has_medicine {}]->(to:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Bar\"})"
     end
   end
 end

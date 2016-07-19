@@ -92,3 +92,15 @@ defmodule Callisto.Vertex do
     end
   end
 end
+
+defimpl Callisto.Cypherable, for: Callisto.Vertex do
+  alias Callisto.Cypherable.Shared
+  def to_cypher(vertex, vertex_name \\ "vertex") do
+    {:ok, "(" <> Shared.matcher(vertex_name, vertex.labels, vertex.props) <> ")" }
+  end
+end
+defimpl String.Chars, for: Callisto.Vertex do
+  defdelegate to_string(x), to: Callisto.Cypherable.Shared
+end
+
+

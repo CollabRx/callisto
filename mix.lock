@@ -1,2 +1,4 @@
-%{"inflex": {:hex, :inflex, "1.7.0", "4466a34b7d8e871d8164619ba0f3b8410ec782e900f0ae1d3d27a5875a29532e", [:mix], []},
+%{"fs": {:hex, :fs, "0.9.2", "ed17036c26c3f70ac49781ed9220a50c36775c6ca2cf8182d123b6566e49ec59", [:rebar], []},
+  "inflex": {:hex, :inflex, "1.7.0", "4466a34b7d8e871d8164619ba0f3b8410ec782e900f0ae1d3d27a5875a29532e", [:mix], []},
+  "mix_test_watch": {:hex, :mix_test_watch, "0.2.6", "9fcc2b1b89d1594c4a8300959c19d50da2f0ff13642c8f681692a6e507f92cab", [:mix], [{:fs, "~> 0.9.1", [hex: :fs, optional: false]}]},
   "uuid": {:hex, :uuid, "1.1.4", "36c7734e4c8e357f2f67ba57fb61799d60c20a7f817b104896cca64b857e3686", [:mix], []}}

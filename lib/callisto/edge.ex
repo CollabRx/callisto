@@ -73,3 +73,14 @@ defmodule Callisto.Edge do
     end
   end
 end
+
+defimpl Callisto.Cypherable, for: Callisto.Edge do
+  alias Callisto.Cypherable.Shared
+  def to_cypher(edge, edge_name \\ "edge") do
+    {:ok, "[" <> Shared.matcher(edge_name, edge.relationship, edge.props) <> "]" }
+  end
+end
+defimpl String.Chars, for: Callisto.Edge do
+  defdelegate to_string(x), to: Callisto.Cypherable.Shared
+end
+
