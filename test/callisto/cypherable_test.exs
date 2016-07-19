@@ -6,7 +6,7 @@ defmodule Callisto.CypherableTest do
     test "returns string for vertex" do
       attributes = %{name: "Strawberry"}
       labels = [Medicine]
-      vertex = Callisto.Vertex.cast(attributes, labels: labels)
+      vertex = Callisto.Vertex.new(labels, attributes)
       {:ok, cypher} = Cypherable.to_cypher(vertex)
       assert is_binary(cypher)
     end
@@ -14,7 +14,7 @@ defmodule Callisto.CypherableTest do
     test "returns cypher formated string for vertex" do
       attributes = %{name: "Strawberry"}
       labels = [Medicine]
-      vertex = Callisto.Vertex.cast(attributes, labels: labels)
+      vertex = Callisto.Vertex.new(labels, attributes)
       # {:ok, "(x:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Strawberry\"})"}
       {:ok, cypher} = Cypherable.to_cypher(vertex)
       "(x:Medicine " <> tail = cypher
@@ -33,8 +33,8 @@ defmodule Callisto.CypherableTest do
 
   describe "to_string" do
     setup do
-      v1 = Callisto.Vertex.cast(%{name: "Foo"}, labels: [Treatment])
-      v2 = Callisto.Vertex.cast(%{name: "Bar"}, labels: [Medicine])
+      v1 = Callisto.Vertex.new(Treatment, %{name: "Foo"})
+      v2 = Callisto.Vertex.new(Medicine, %{name: "Bar"})
       e = Callisto.Edge.new(HasMedicine)
       {:ok, v1: v1, v2: v2, e: e, 
             triple: %Callisto.Triple{from: v1, to: v2, edge: e} }

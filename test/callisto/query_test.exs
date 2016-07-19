@@ -4,7 +4,7 @@ defmodule Callisto.QueryTest do
 
   test "queries" do
     treatment_attributes = %{name: "Yelling"}
-    from_vertex = Vertex.cast(treatment_attributes, labels: [Treatment])
+    from_vertex = Vertex.new(Treatment, treatment_attributes)
 
     edge = Edge.new(HasMedicine)
 
