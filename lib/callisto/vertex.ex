@@ -6,7 +6,12 @@ defmodule Callisto.Vertex do
   alias __MODULE__
   alias Callisto.{Cypher, Properties}
 
-  defstruct props: %{}, labels: [], validators: []
+  defstruct id: nil, props: %{}, labels: [], validators: []
+  # NOTE:  id is made "special" here, but its use is non-specific.
+  #        In some systems, it could be populated with an internal, persistent
+  #        ID that can be used to identify a specific entity in the graph
+  #        database, or it could mirror an ID field in the properties, which
+  #        is self-managed, or it can just be ignored.
 
   def to_cypher(v, name \\ "v") do
     "(#{Cypher.matcher(name, v.labels, v.props)})"
@@ -39,11 +44,19 @@ defmodule Callisto.Vertex do
     Enum.map labels, fn(label) ->
       cond do
         is_bitstring(label) -> label
-        true -> struct(label)._callisto_name[:name]
+        true -> label.__callisto_properties.name
       end
     end
   end
   defp normalize_labels(labels), do: normalize_labels([labels])
+
+  defmacro __using__(_options) do
+    quote do
+      use Callisto.Properties
+
+      defdelegate to_cypher(x, name), to: Callisto.Vertex
+    end
+  end
 end
 
 defimpl String.Chars, for: Callisto.Vertex do

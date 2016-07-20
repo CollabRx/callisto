@@ -3,7 +3,7 @@ defmodule Callisto.Properties do
   defmacro __using__(_) do
     quote do
       import Callisto.Properties, only: [properties: 1]
-      Module.register_attribute(__MODULE__, :callisto_properties, accumulate: true)
+      Module.register_attribute(__MODULE__, :callisto_properties, accumulate: false)
     end
   end
 
@@ -11,23 +11,38 @@ defmodule Callisto.Properties do
     quote do
       try do
         import Callisto.Properties
+        default_name = to_string(__MODULE__ )
+                       |> String.split(".")
+                       |> List.last
+                       |> Inflex.camelize
+        props = Module.put_attribute(__MODULE__, :callisto_properties,
+                                     %{name: default_name, fields: %{} })
+
         unquote(block)
 
-        propname = Inflex.camelize(__MODULE__ |> to_string |> String.split(".") |> List.last)
         attrs = Module.get_attribute(__MODULE__, :callisto_properties)
-        case Keyword.get(attrs, :_callisto_name, nil) do
-          nil -> Keyword.put(attrs, :_callisto_name, [name: propname])
-          _ -> attrs
-        end |> defstruct
+        args = Enum.reduce(attrs.fields, [],
+                           fn({k, v}, acc) ->
+          acc ++ [{k, Keyword.get(v, :default)}]
+        end)
+        @callisto_properties attrs
+        def __callisto_properties(), do: @callisto_properties
+        def __callisto_field(field), do: @callisto_properties.fields[field]
+
+        defstruct args
       after
         :ok
       end
     end
   end
+  def __callisto_properties(arg), do: arg.__struct__.__callisto_properties
+  def __callisto_field(arg, field), do: __callisto_properties(arg).fields[field]
 
   defmacro name(name) do
     quote do
-      Module.put_attribute(__MODULE__, :callisto_properties, {:_callisto_name, [name: unquote(name)]})
+      new_props = Module.get_attribute(__MODULE__, :callisto_properties)
+                  |> Map.merge(%{name: unquote(name)})
+      Module.put_attribute(__MODULE__, :callisto_properties, new_props)
     end
   end
     
@@ -35,7 +50,9 @@ defmodule Callisto.Properties do
   defmacro field(name, type, options \\ []) do
     options = [type: type] ++ options
     quote do
-      Module.put_attribute(__MODULE__, :callisto_properties, {unquote(name), unquote(options)})
+      props = Module.get_attribute(__MODULE__, :callisto_properties)
+      new_props = Map.put(props, :fields, Map.put(props.fields, unquote(name), unquote(options)))
+      Module.put_attribute(__MODULE__, :callisto_properties, new_props)
     end
   end
 
@@ -50,7 +67,7 @@ defmodule Callisto.Properties do
   end
 
   defp _cast_value(key, value, type) do
-    definition = struct(type)
+    definition = type.__callisto_properties.fields
                  |> Map.get(key, %{})
                  |> Map.new
     {:ok, parsed_value} = Callisto.Type.cast(definition[:type], value)
@@ -58,8 +75,7 @@ defmodule Callisto.Properties do
   end
 
   defp _set_defaults(data, type) do
-    struct(type)
-    |> Map.from_struct
+    type.__callisto_properties.fields
     |> Enum.filter(fn({_, value}) -> Keyword.has_key?(value, :default) end)
     |> Enum.map(fn({key, value}) -> {key, value[:default]} end)
     |> Map.new
@@ -69,7 +85,7 @@ defmodule Callisto.Properties do
   # To avoid leaking atoms, we only atomize those keys that are a) not
   # already atoms, and b) referenced by the type.
   defp _atomize_keys(data, type) do
-    Map.from_struct(type)
+    type.__callisto_properties.fields
     |> Map.keys
     |> Enum.filter(&(Map.has_key?(data, Atom.to_string(&1))))
     |> Enum.reduce(Map.new(data), fn(atom_key, acc) ->
@@ -80,7 +96,7 @@ defmodule Callisto.Properties do
   end
 
   defp _validate_required_keys(data, type) do
-    Map.from_struct(type)
+    type.__callisto_properties.fields
     |> Enum.filter(fn({_, value}) -> value[:required] == true end)
     |> Keyword.keys
     |> Enum.filter(fn(key) -> !Map.has_key?(data, key) end)
