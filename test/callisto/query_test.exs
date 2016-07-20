@@ -2,6 +2,9 @@ defmodule Callisto.QueryTest do
   use ExUnit.Case
   alias Callisto.{Edge,Query,Vertex}
 
+  doctest Query
+
+  @tag :skip
   test "queries" do
     treatment_attributes = %{name: "Yelling"}
     from_vertex = Vertex.new(Treatment, treatment_attributes)

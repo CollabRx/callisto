@@ -50,15 +50,11 @@ defmodule Callisto.Properties do
   end
 
   defp _cast_value(key, value, type) do
-    relationship_data = struct(type) |> Map.from_struct
-    if Map.has_key?(relationship_data, key) do
-      definitions = Map.get(relationship_data, key)
-      type = definitions[:type]
-      {:ok, parsed_value} = Callisto.Type.cast(type, value)
-      {key, parsed_value}
-    else
-      {key, value}
-    end
+    definition = struct(type)
+                 |> Map.get(key, %{})
+                 |> Map.new
+    {:ok, parsed_value} = Callisto.Type.cast(definition[:type], value)
+    {key, parsed_value}
   end
 
   defp _set_defaults(data, type) do
