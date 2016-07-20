@@ -4,9 +4,13 @@ defmodule Callisto.Edge do
   """
 
   alias __MODULE__
-  alias Callisto.Properties
+  alias Callisto.{Cypher, Properties}
 
   defstruct props: %{}, relationship: nil, type: nil
+
+  def to_cypher(e, name \\ "r") do
+    "[#{Cypher.matcher(name, e.relationship, e.props)}]"
+  end
 
   @doc """
     Returns an Edge with <data> properties, and <type> set.  If <type> is
@@ -24,13 +28,7 @@ defmodule Callisto.Edge do
   end
 end
 
-defimpl Callisto.Cypherable, for: Callisto.Edge do
-  alias Callisto.Cypherable.Shared
-  def to_cypher(edge, edge_name \\ "edge") do
-    {:ok, "[" <> Shared.matcher(edge_name, edge.relationship, edge.props) <> "]" }
-  end
-end
 defimpl String.Chars, for: Callisto.Edge do
-  defdelegate to_string(x), to: Callisto.Cypherable.Shared
+  def to_string(x), do: Callisto.Edge.to_cypher(x, "x")
 end
 

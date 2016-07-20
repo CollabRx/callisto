@@ -4,9 +4,13 @@ defmodule Callisto.Vertex do
   """
 
   alias __MODULE__
-  alias Callisto.Properties
+  alias Callisto.{Cypher, Properties}
 
   defstruct props: %{}, labels: [], validators: []
+
+  def to_cypher(v, name \\ "v") do
+    "(#{Cypher.matcher(name, v.labels, v.props)})"
+  end
 
   @doc """
     Returns a Vertex with <data> properties, and <labels>.  <labels> is
@@ -16,11 +20,19 @@ defmodule Callisto.Vertex do
   def new(labels, data) when is_map(data), do: new(labels, Map.to_list(data))
   def new(labels, data) when is_list(labels) != true, do: new([labels], data)
   def new(labels, data) do
+    %{ cast(labels, data) | 
+       props: Enum.reduce(labels, Map.new(data), fn(label, acc) ->
+                Properties.cast_props(label, acc)
+              end) }
+  end
+
+  def cast(labels), do: cast(labels, [])
+  def cast(labels, data) when is_map(data), do: cast(labels, Map.to_list(data))
+  def cast(labels, data) when is_list(labels) != true, do: cast([labels], data)
+  def cast(labels, data) do
     %Vertex{validators: labels,
             labels: normalize_labels(labels),
-            props: Enum.reduce(labels, Map.new(data), fn(label, acc) ->
-                     Properties.cast_props(label, acc)
-                   end) }
+            props: Map.new(data) }
   end
 
   defp normalize_labels(labels) when is_list(labels) do
@@ -34,14 +46,8 @@ defmodule Callisto.Vertex do
   defp normalize_labels(labels), do: normalize_labels([labels])
 end
 
-defimpl Callisto.Cypherable, for: Callisto.Vertex do
-  alias Callisto.Cypherable.Shared
-  def to_cypher(vertex, vertex_name \\ "vertex") do
-    {:ok, "(" <> Shared.matcher(vertex_name, vertex.labels, vertex.props) <> ")" }
-  end
-end
 defimpl String.Chars, for: Callisto.Vertex do
-  defdelegate to_string(x), to: Callisto.Cypherable.Shared
+  def to_string(x), do: Callisto.Vertex.to_cypher(x, "x")
 end
 
 
