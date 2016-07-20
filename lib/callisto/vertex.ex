@@ -50,13 +50,6 @@ defmodule Callisto.Vertex do
   end
   defp normalize_labels(labels), do: normalize_labels([labels])
 
-  defmacro __using__(_options) do
-    quote do
-      use Callisto.Properties
-
-      defdelegate to_cypher(x, name), to: Callisto.Vertex
-    end
-  end
 end
 
 defimpl String.Chars, for: Callisto.Vertex do

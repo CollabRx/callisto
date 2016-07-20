@@ -37,6 +37,7 @@ defmodule Callisto.PropertiesTest do
       end
     end
     assert is_nil(PropertyTestFoo.__callisto_properties.id)
+    assert Map.keys(struct(PropertyTestFoo)) == [:__struct__, :foo]
   end
 
   test "can work without ID config parameter" do
@@ -47,6 +48,7 @@ defmodule Callisto.PropertiesTest do
       end
     end
     assert PropertyTestBar.__callisto_properties.id == :string
+    assert Map.keys(struct(PropertyTestBar)) == [:__struct__, :foo, :id]
   end
 
   test "ID config 'false' doesn't set id in struct" do
