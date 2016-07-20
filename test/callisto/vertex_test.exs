@@ -5,7 +5,7 @@ defmodule Callisto.VertexTest do
     attributes = %{name: "Flubberanate", dose: "20"}
     expected_props = %{name: "Flubberanate", dose: 20, efficacy: 0.9, is_bitter: false}
     labels = [Medicine]
-    vertex = Callisto.Vertex.cast(attributes, labels: labels)
+    vertex = Callisto.Vertex.new(labels, attributes)
     assert vertex.props == expected_props
     assert vertex.labels == ["Medicine"]
   end
@@ -14,7 +14,7 @@ defmodule Callisto.VertexTest do
     attributes = %{"name" => "Flubberanate", "dose" => "20"}
     expected_props = %{name: "Flubberanate", dose: 20, efficacy: 0.9, is_bitter: false}
     labels = [Medicine]
-    vertex = Callisto.Vertex.cast(attributes, labels: labels)
+    vertex = Callisto.Vertex.new(labels, attributes)
     assert vertex.props == expected_props
   end
 
@@ -23,7 +23,7 @@ defmodule Callisto.VertexTest do
     labels = [Medicine]
     expected_error = "missing required fields: (name)"
     assert_raise ArgumentError, expected_error, fn ->
-      Callisto.Vertex.cast(attributes, labels: labels)
+      Callisto.Vertex.new(labels, attributes)
     end
   end
 
@@ -31,32 +31,30 @@ defmodule Callisto.VertexTest do
     attributes = %{name: "Yodogin", dose: 30, comment: "Totally safe"}
     expected_props = %{name: "Yodogin", dose: 30, comment: "Totally safe", efficacy: 0.9, is_bitter: false}
     labels = [Medicine]
-    vertex = Callisto.Vertex.cast(attributes, labels: labels)
+    vertex = Callisto.Vertex.new(labels, attributes)
     assert vertex.props == expected_props
   end
 
   test "sets properties with no labels" do
     attributes = %{name: "Yodogin", dose: 30, comment: "Totally safe"}
-    vertex1 = Callisto.Vertex.cast(attributes, labels: [])
-    vertex2 = Callisto.Vertex.cast(attributes)
+    vertex1 = Callisto.Vertex.new([], attributes)
     assert vertex1.props == attributes
-    assert vertex2.props == attributes
   end
 
   test "sets default properties for multiple labels" do
     attributes = %{name: "Flamiacin"}
     expected_props = %{name: "Flamiacin", dose: 100, duration: 1, efficacy: 0.9, is_bitter: false}
     labels = [Medicine, Treatment]
-    vertex = Callisto.Vertex.cast(attributes, labels: labels)
+    vertex = Callisto.Vertex.new(labels, attributes)
     assert vertex.props == expected_props
   end
 
-  test "sets labels to atoms when they are passed as strings" do
+  test "supports mix of string and property labels" do
     attributes = %{name: "Flamiacin"}
-    expected_props = %{name: "Flamiacin", dose: 100, duration: 1, efficacy: 0.9, is_bitter: false}
-    labels = ["Medicine", "Treatment"]
-    vertex = Callisto.Vertex.cast(attributes, labels: labels)
+    expected_props = %{name: "Flamiacin", dose: 100, efficacy: 0.9, is_bitter: false}
+    labels = [Medicine, "Treatment"]
+    vertex = Callisto.Vertex.new(labels, attributes)
     assert vertex.props == expected_props
-    assert vertex.labels == labels
+    assert vertex.labels == ["Medicine", "Treatment"]
   end
 end

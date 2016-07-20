@@ -1,5 +1,5 @@
 defmodule Medicine do
-  use Callisto.Label
+  use Callisto.Properties
 
   properties do
     field :name, :string, required: true

@@ -30,6 +30,7 @@ defmodule Callisto.Mixfile do
     [
       {:inflex, "~> 1.7.0"},
       {:uuid, "~> 1.1"},
+      {:mix_test_watch, "~> 0.2", only: :dev},
     ]
   end
 end
