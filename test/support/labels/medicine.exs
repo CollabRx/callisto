@@ -1,7 +1,7 @@
 defmodule Medicine do
   use Callisto.Properties
 
-  properties do
+  properties [id: :string] do
     field :name, :string, required: true
     field :is_bitter, :boolean, default: false
     field :dose, :integer, default: 100
