@@ -16,10 +16,10 @@ defmodule Callisto.Triple do
        true -> names |> Map.new
        false -> Map.merge(%{from: "v1", to: "v2", edge: "r"}, Enum.zip([:from, :edge, :to], names) |> Map.new)
     end
-    with {:ok, v1} <- Vertex.to_cypher(triple.from, name_hash.from),
-         {:ok, v2} <- Vertex.to_cypher(triple.to, name_hash.to),
-         {:ok, edge} <- Edge.to_cypher(triple.edge, name_hash.edge),
-         do: {:ok, "#{v1}-#{edge}->#{v2}"}
+    v1 = Vertex.to_cypher(triple.from, name_hash.from)
+    v2 = Vertex.to_cypher(triple.to, name_hash.to)
+    edge = Edge.to_cypher(triple.edge, name_hash.edge)
+    "#{v1}-#{edge}->#{v2}"
   end
 
   def new() do

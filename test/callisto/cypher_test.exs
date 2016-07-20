@@ -53,24 +53,22 @@ defmodule Callisto.CypherTest do
       {:ok, v1: v1, v2: v2, e: e, 
             triple: %Callisto.Triple{from: v1, to: v2, edge: e} }
     end
-    @tag :skip
     test "vertex", %{v1: v} do
-      assert to_string(v) == "(x:Treatment {dose: 50, duration: 1, name: \"Foo\"})"
+      assert to_string(v) == "(x:Treatment {dose: 50, duration: 1, name: 'Foo'})"
     end
 
     test "edge", %{e: e} do
       assert to_string(e) == "[x:has_medicine]"
     end
 
-    @tag :skip
     test "triple", %{triple: t} do
       # Tests that "to_string" makes sense, and to_cypher with no names is
       # the same.
-      assert to_string(t) == "(v1:Treatment {dose: 50, duration: 1, name: \"Foo\"})-[r:has_medicine {}]->(v2:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Bar\"})"
+      assert to_string(t) == "(v1:Treatment {dose: 50, duration: 1, name: 'Foo'})-[r:has_medicine]->(v2:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: 'Bar'})"
       assert to_string(t) == Cypher.to_cypher(t)
 
       # Tests that you can set the names as either a list or Keyword list.
-      expected = "(from:Treatment {dose: 50, duration: 1, name: \"Foo\"})-[edge:has_medicine {}]->(to:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Bar\"})"
+      expected = "(from:Treatment {dose: 50, duration: 1, name: 'Foo'})-[edge:has_medicine]->(to:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: 'Bar'})"
       assert Cypher.to_cypher(t, ["from", "edge", "to"]) ==  expected
       assert Cypher.to_cypher(t, from: "from", edge: "edge", to: "to") == expected
     end
