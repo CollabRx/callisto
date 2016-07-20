@@ -1,6 +1,6 @@
 defmodule Callisto.Query do
   alias __MODULE__
-  alias Callisto.{Cypher, Vertex}
+  alias Callisto.Cypher
 
   defstruct create: nil,
             match: nil,
