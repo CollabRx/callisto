@@ -37,9 +37,9 @@ defmodule Callisto.Properties do
 
         defstruct args
 
-        def apply_defaults(x), do: Properties.apply_defaults(x, __MODULE__)
-        def validate(x), do: Properties.validate(x, __MODULE__)
-        def cast_props(x), do: Properties.cast_props(x, __MODULE__)
+        def apply_defaults(x), do: Callisto.Properties.apply_defaults(x, __MODULE__)
+        def validate(x), do: Callisto.Properties.validate(x, __MODULE__)
+        def cast_props(x), do: Callisto.Properties.cast_props(x, __MODULE__)
       after
         :ok
       end
