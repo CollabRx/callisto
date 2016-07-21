@@ -25,10 +25,7 @@ defmodule Callisto.Vertex do
   def new(labels, data) when is_map(data), do: new(labels, Map.to_list(data))
   def new(labels, data) when is_list(labels) != true, do: new([labels], data)
   def new(labels, data) do
-    %{ cast(labels, data) | 
-       props: Enum.reduce(labels, Map.new(data), fn(label, acc) ->
-                Properties.cast_props(label, acc)
-              end) }
+    %{ cast(labels, data) | props: Properties.cast_props(labels, data) }
   end
 
   def cast(labels), do: cast(labels, [])
@@ -49,6 +46,13 @@ defmodule Callisto.Vertex do
     end
   end
   defp normalize_labels(labels), do: normalize_labels([labels])
+
+#  def create(v = %Vertex{}) do
+#    %Query{create: to_cypher(v, "v")}
+#    |> Query.returning(v: true)
+#    |> ????
+#
+#  end
 
 end
 

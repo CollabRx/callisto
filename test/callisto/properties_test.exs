@@ -1,7 +1,10 @@
 defmodule Callisto.PropertiesTest do
   use ExUnit.Case
 
-  alias Callisto.Properties
+  alias Callisto.{Properties, Type}
+
+  doctest Type
+  doctest Properties
 
   test "defines properties on label struct" do
     med = %Medicine{}
