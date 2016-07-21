@@ -17,12 +17,22 @@ defmodule Callisto.Edge do
     a module, will use that to validate the properties and define the name.
     If <type> is a string, that will be the name of the edge type.
   """
-  def new(type), do: new(type, [])
-  def new(type, data) when is_map(data), do: new(type, Map.to_list(data))
+  def new(type), do: new(type, %{})
+  def new(type, data) when is_list(data), do: new(type, Map.new(data))
   def new(type, data) when is_bitstring(type) do
     %Edge{props: data, relationship: type}
   end
   def new(type, data) when is_atom(type) do
+    %Edge{relationship: type.__callisto_properties.name,
+          type: type, props: Properties.cast_props(type, data)}
+  end
+
+  def cast(type), do: cast(type, %{})
+  def cast(type, data) when is_list(data), do: cast(type, Map.new(data))
+  def cast(type, data) when is_bitstring(type) do
+    %Edge{props: data, relationship: type}
+  end
+  def cast(type, data) when is_atom(type) do
     %Edge{relationship: type.__callisto_properties.name,
           type: type, props: Properties.cast_props(type, data)}
   end

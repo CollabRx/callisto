@@ -2,7 +2,7 @@
 # if there were an ecto plugin for neo4j this would exist, but since it doesn't,
 # let's just do this for now.
 defmodule Callisto.GraphDB do
-  alias Callisto.{Query, Vertex}
+  alias Callisto.{Edge, Query, Vertex}
 
   @moduledoc """
     Defines a graph DB (repository).
@@ -55,12 +55,16 @@ defmodule Callisto.GraphDB do
         Callisto.GraphDB.Queryable.exists?(@adapter, matcher)
       end
 
-      def get(finder, labels, props \\ nil) do
+      def get(finder, labels, props \\ %{}) do
         Callisto.GraphDB.Queryable.get(@adapter, finder, labels, props)
       end
 
-      def get!(finder, labels, props \\ nil) do
+      def get!(finder, labels, props \\ %{}) do
         Callisto.GraphDB.Queryable.get!(@adapter, finder, labels, props)
+      end
+
+      def create(vertex=%Callisto.Vertex{}) do
+        Callisto.GraphDB.Queryable.create(@adapter, vertex)
       end
     end
   end
@@ -121,6 +125,12 @@ defmodule Callisto.GraphDB do
   @callback get(Vertex.t | Edge.t, list(String.t | module), map | list | nil) :: tuple
   @callback get!(Vertex.t | Edge.t, list(String.t | module), map | list | nil) :: list(struct)
 
+  @doc ~S"""
+    Creates the vertex, defined by the given Vertex struct, in the database,
+    returns the resulting Vertex.  Returns {:ok, vertex} on success.
+  """
+  @callback create(Vertex.t) :: tuple
+
   # This takes a returned tuple from Neo4j and a Callisto.Query struct;
   # it looks at the Query's return key and attempts to convert the
   # returned data to the matching structs (if indicated).  If there's
@@ -133,8 +143,11 @@ defmodule Callisto.GraphDB do
         key = to_string(k)
         cond do
           is_nil(v) -> {key, row[key]}
-          v == true -> {key, Vertex.new([], row[key])}
-          is_atom(v) -> {key, Vertex.new([v], row[key])}
+          v == true -> {key, Vertex.cast([], row[key])}
+          v == Vertex -> {key, Vertex.cast(row["labels(#{key})"], row[key])}
+          v == Edge -> {key, Edge.cast(row["type(#{key})"], row[key])}
+          is_binary(v) -> {key, Vertex.cast(v, row[key])}
+          is_atom(v) || is_list(v) -> {key, Vertex.cast(v, row[key])}
           true -> {key, row[key]}
         end
       end)

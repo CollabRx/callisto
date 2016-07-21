@@ -1,6 +1,6 @@
 defmodule Callisto.Query do
   alias __MODULE__
-  alias Callisto.Cypher
+  alias Callisto.{Cypher, Vertex}
 
   defstruct create: nil,
             match: nil,
@@ -66,6 +66,9 @@ defmodule Callisto.Query do
   """
   def create(query=%Query{}, pattern) when is_bitstring(pattern) do
     %{query | create: pattern}
+  end
+  def create(query=%Query{}, vert=%Vertex{}) do
+    %{query | create: Cypher.to_cypher(vert)}
   end
 
   # If you set the query to a string or nil, just accept it directly

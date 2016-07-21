@@ -21,20 +21,20 @@ defmodule Callisto.Vertex do
     Returns a Vertex with <data> properties, and <labels>.  <labels> is
     expected to be one or more strings or structs that have used Label.
   """
-  def new(labels), do: new(labels, [])
-  def new(labels, data) when is_map(data), do: new(labels, Map.to_list(data))
+  def new(labels), do: new(labels, %{})
+  def new(labels, data) when is_list(data), do: new(labels, Map.new(data))
   def new(labels, data) when is_list(labels) != true, do: new([labels], data)
   def new(labels, data) do
     %{ cast(labels, data) | props: Properties.cast_props(labels, data) }
   end
 
-  def cast(labels), do: cast(labels, [])
-  def cast(labels, data) when is_map(data), do: cast(labels, Map.to_list(data))
+  def cast(labels), do: cast(labels, %{})
+  def cast(labels, data) when is_list(data), do: cast(labels, Map.new(data))
   def cast(labels, data) when is_list(labels) != true, do: cast([labels], data)
   def cast(labels, data) do
     %Vertex{validators: labels,
             labels: normalize_labels(labels),
-            props: Map.new(data) }
+            props: data }
   end
 
   defp normalize_labels(labels) when is_list(labels) do
