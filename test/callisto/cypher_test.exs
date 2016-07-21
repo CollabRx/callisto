@@ -1,14 +1,15 @@
 defmodule Callisto.CypherTest do
   use ExUnit.Case
-  alias Callisto.Cypher
+  alias Callisto.{Cypher, Edge, Query, Triple, Vertex}
 
   doctest Cypher
+  doctest Query
 
   describe "for vertex" do
     test "returns string for vertex" do
       attributes = %{name: "Strawberry"}
       labels = [Medicine]
-      vertex = Callisto.Vertex.new(labels, attributes)
+      vertex = Vertex.new(labels, attributes)
       cypher = Cypher.to_cypher(vertex)
       assert is_bitstring(cypher)
     end
@@ -16,7 +17,7 @@ defmodule Callisto.CypherTest do
     test "returns cypher formated string for vertex" do
       attributes = %{name: "Strawberry"}
       labels = [Medicine]
-      vertex = Callisto.Vertex.new(labels, attributes)
+      vertex = Vertex.new(labels, attributes)
       # {:ok, "(x:Medicine {dose: 100, efficacy: 0.9, is_bitter: false, name: \"Strawberry\"})"}
       cypher = Cypher.to_cypher(vertex)
       "(x:Medicine " <> tail = cypher
@@ -26,7 +27,7 @@ defmodule Callisto.CypherTest do
 
   describe "for edge" do
     test "returns string for edge" do
-      edge = Callisto.Edge.new(HasMedicine)
+      edge = Edge.new(HasMedicine)
 
       cypher = Cypher.to_cypher(edge)
       assert is_bitstring(cypher)
@@ -47,11 +48,11 @@ defmodule Callisto.CypherTest do
 
   describe "to_string" do
     setup do
-      v1 = Callisto.Vertex.new(Treatment, %{name: "Foo"})
-      v2 = Callisto.Vertex.new(Medicine, %{name: "Bar"})
-      e = Callisto.Edge.new(HasMedicine)
+      v1 = Vertex.new(Treatment, %{name: "Foo"})
+      v2 = Vertex.new(Medicine, %{name: "Bar"})
+      e = Edge.new(HasMedicine)
       {:ok, v1: v1, v2: v2, e: e, 
-            triple: %Callisto.Triple{from: v1, to: v2, edge: e} }
+            triple: %Triple{from: v1, to: v2, edge: e} }
     end
     test "vertex", %{v1: v} do
       assert to_string(v) == "(x:Treatment {dose: 50, duration: 1, name: 'Foo'})"

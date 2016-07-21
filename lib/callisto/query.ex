@@ -24,7 +24,7 @@ defmodule Callisto.Query do
       iex> %Query{} |> Query.match("(x:Disease)") |> to_string
       "MATCH (x:Disease)"
 
-      iex> %Query{} |> Query.match(x: Vertex.new("Medicine", %{dose: 42})) |> to_string
+      iex> %Query{} |> Query.match(x: Vertex.cast("Medicine", %{dose: 42})) |> to_string
       "MATCH (x:Medicine {dose: 42})"
 
       iex> %Query{} |> Query.match(x: %{id: 42}) |> to_string

@@ -23,7 +23,7 @@ defmodule Callisto.Edge do
     %Edge{props: data, relationship: type}
   end
   def new(type, data) when is_atom(type) do
-    %Edge{relationship: struct(type)._callisto_name[:name],
+    %Edge{relationship: type.__callisto_properties.name,
           type: type, props: Properties.cast_props(type, data)}
   end
 end

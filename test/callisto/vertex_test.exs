@@ -85,4 +85,5 @@ defmodule Callisto.VertexTest do
     assert vertex.props == expected_props
     assert vertex.labels == ["Medicine", "Treatment"]
   end
+
 end
