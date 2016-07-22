@@ -80,6 +80,10 @@ defmodule Callisto.GraphDB do
         create(Callisto.Triple.new(from: from, to: to, edge: edge))
       end
 
+      def get_or_create(vertex=%Callisto.Vertex{}) do
+        Callisto.GraphDB.Queryable.get_or_create(@adapter, vertex)
+      end
+
       def delete(vertex=%Callisto.Vertex{}, opts \\ []) do
         Callisto.GraphDB.Queryable.delete(@adapter, vertex, opts)
       end
@@ -158,6 +162,12 @@ defmodule Callisto.GraphDB do
     Returns {:ok, [triples]} on success.
   """
   @callback create(Vertex.t, Edge.t, Vertex.t) :: tuple
+
+  @doc ~S"""
+    Returns existing matching Vertex record; if none exist, one is created
+    and returned.  Returns {:ok, [vertices]} on success.
+  """
+  @callback get_or_create(Vertex.t) :: tuple
 
   @doc ~S"""
     Deletes all vertices that match. Returns {:ok, []} on success (on success,

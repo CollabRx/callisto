@@ -91,6 +91,13 @@ defmodule Callisto.GraphDB.Queryable do
     end)
   end
 
+  def get_or_create(adapter, vertex=%Vertex{}) do
+    cypher = %Query{}
+             |> Query.merge(x: vertex)
+             |> Query.returning(x: Vertex, "labels(x)": nil)
+    query(adapter, cypher, &deref_all/1)
+  end
+
   defp deref_all(rows, key \\ "x") do
     Enum.map(rows, &(&1[key]))
   end
