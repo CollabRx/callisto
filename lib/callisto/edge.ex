@@ -20,17 +20,15 @@ defmodule Callisto.Edge do
     If <type> is a string, that will be the name of the edge type.
   """
   def new(type), do: new(type, %{})
-  def new(type, data) when is_list(data), do: new(type, Map.new(data))
-  def new(type, data) when is_bitstring(type) do
-    %Edge{props: data, relationship: type}
-    |> Properties.denormalize_id
-  end
-  def new(type, data) when is_atom(type) do
-    %Edge{relationship: type.__callisto_properties.name,
-          type: type, props: Properties.cast_props(type, data)}
+  def new(type, data) do
+    %{cast(type, data) | props: Properties.cast_props(type, data) }
     |> Properties.denormalize_id
   end
 
+  @doc """
+    Returns an Edge with discoverable properties, but doesn't apply any
+    type defaults or validation.  See new/2.
+  """
   def cast(type), do: cast(type, %{})
   def cast(type, data) when is_list(data), do: cast(type, Map.new(data))
   def cast(type, data) when is_bitstring(type) do

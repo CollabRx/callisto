@@ -1,6 +1,20 @@
 defmodule Callisto.Cypher do
   alias Callisto.Vertex
 
+  @doc ~S"""
+    Converts the arguments into Cypher matchers.  If given a struct of any
+    kind, attempts to call to_cypher on the struct (so you can define your
+    own if you want).  If passed a simple map or keyword list, will presume
+    you're looking to match nodes (Vertex) without regard for labels, so
+    casts that directly.
+
+      iex> Cypher.to_cypher(%{foo: "bar"})
+      "(x {foo: 'bar'})"
+      iex> Cypher.to_cypher(%{foo: "bar"}, "biff")
+      "(biff {foo: 'bar'})"
+      iex> Cypher.to_cypher(Edge.new("wants_a", how_much: "badly"), "r")
+      "[r:wants_a {how_much: 'badly'}]"
+  """
   def to_cypher(x), do: to_cypher(x, "x")
   def to_cypher(x, name) when is_atom(name), do: to_cypher(x, to_string(name))
   def to_cypher(x=%{__struct__: type}, name), do: type.to_cypher(x, name)
@@ -10,16 +24,40 @@ defmodule Callisto.Cypher do
   end
   
 
+  @doc ~S"""
+    Generates the common "matching" criteria for Cypher.  The only real
+    difference between Vertex and Edge matching is whether the matching
+    criteria is surrounded by parens (Vertex) or brackets (Edge).  We do
+    one sneaky thing here, though -- if a property has the :id key, we
+    ignore all other other properties, and presume the ID is sufficient to
+    find the correct object(s).
+
+      iex> Cypher.matcher("x", "Foo", %{id: 42, cereal: "BooBerry"})
+      "x:Foo {id: 42}"
+  """
   def matcher(name, labels, props) when is_list(labels) != true,
       do: matcher(name, [labels], props)
-  def matcher(name, labels, props) do
+  def matcher(name, labels, %{id: id}), do: do_matcher(name, labels, %{id: id})
+  def matcher(name, labels, props), do: do_matcher(name, labels, props)
+  defp do_matcher(name, labels, props) do
     ["#{name}#{labels_suffix(labels)}", set_values(props)]
     |> Enum.reject(&(&1 == ""))
     |> Enum.join(" ")
   end
 
+  @doc ~S"""
+    Escapes the value for insertion into a Cypher string.  We consistently use
+    single quotes, so we don't need to escape double quotes.
+
+      iex> Cypher.escape("don't\tstop\nthinking about tomorrow")
+      "don\\'t\\tstop\\nthinking about tomorrow"
+  """
   def escape(value) when is_bitstring(value) do
-    String.replace(value, "'", "\\'")
+    String.replace(value, "\\", "\\\\") # REPLACE THESE FIRST!
+    |> String.replace("'", "\\'")
+    |> String.replace("\t", "\\t")
+    |> String.replace("\n", "\\n")
+    |> String.replace("\r", "\\r")
   end
   def escape(value) when is_nil(value), do: "NULL"
   def escape(value), do: to_string(value)
@@ -36,8 +74,11 @@ defmodule Callisto.Cypher do
     which is consistently used in various places (the curly brace containing
     key/value pairs).  Returns empty string if there are no keys.
 
-      iex> Cypher.set_values(x: 42, y: "biff")
-      "{x: 42, y: 'biff'}"
+    NOTE:  If a value is nil, will convert to NULL; if you don't want nil
+           values escaped to NULL, use set_not_nil_values
+
+      iex> Cypher.set_values(x: 42, y: "biff", nothing: nil)
+      "{x: 42, y: 'biff', nothing: NULL}"
 
       iex> Cypher.set_values(%{})
       ""

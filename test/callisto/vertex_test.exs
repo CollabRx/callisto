@@ -3,6 +3,8 @@ defmodule Callisto.VertexTest do
 
   alias Callisto.Vertex
 
+  doctest Vertex
+
   test "defines props and labels" do
     attributes = %{name: "Flubberanate", dose: "20"}
     expected_props = %{name: "Flubberanate", dose: 20, efficacy: 0.9, is_bitter: false}

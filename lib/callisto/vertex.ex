@@ -16,16 +16,21 @@ defmodule Callisto.Vertex do
 
   @doc """
     Returns a Vertex with <data> properties, and <labels>.  <labels> is
-    expected to be one or more strings or structs that have used Label.
+    expected to be one or more strings or structs that have used Properties.
+    Properties struct labels will have their defaults and validations
+    applied.
   """
   def new(labels), do: new(labels, %{})
-  def new(labels, data) when is_list(data), do: new(labels, Map.new(data))
-  def new(labels, data) when is_list(labels) != true, do: new([labels], data)
   def new(labels, data) do
     %{ cast(labels, data) | props: Properties.cast_props(labels, data) }
     |> Properties.denormalize_id
   end
 
+  @doc """
+    Returns a Vertex with <data> properties, and <labels>.  <labels> is
+    expected to be one or more strings or structs that have used Label.
+    No validations or defaults are applied.
+  """
   def cast(labels), do: cast(labels, %{})
   def cast(labels, data) when is_list(data), do: cast(labels, Map.new(data))
   def cast(labels, data) when is_list(labels) != true, do: cast([labels], data)
@@ -36,6 +41,8 @@ defmodule Callisto.Vertex do
             id: data["id"] || data[:id] }
   end
 
+  # If a label is actually a struct, use the Callisto properties name instead
+  # and keep the labels separate from the validators.
   defp normalize_labels(labels) when is_list(labels) do
     Enum.map labels, fn(label) ->
       cond do
