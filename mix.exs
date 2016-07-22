@@ -7,6 +7,9 @@ defmodule Callisto.Mixfile do
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     test_coverage: [
+       tool: Coverex.Task,
+       console_log: true],
      deps: deps()]
   end
 
@@ -31,6 +34,10 @@ defmodule Callisto.Mixfile do
       {:inflex, "~> 1.7.0"},
       {:uuid, "~> 1.1"},
       {:mix_test_watch, "~> 0.2", only: :dev},
+
+      # coverage tool for tests
+      # https://github.com/alfert/coverex
+      {:coverex, "~> 1.4.9", only: :test},
     ]
   end
 end
