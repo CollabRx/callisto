@@ -50,6 +50,10 @@ defmodule Callisto.GraphDB do
       def count(matcher) do
         Callisto.GraphDB.Queryable.count(@adapter, matcher)
       end
+      def count!(matcher) do
+        Callisto.GraphDB.Queryable.count!(@adapter, matcher)
+      end
+       
 
       def exists?(matcher) do
         Callisto.GraphDB.Queryable.exists?(@adapter, matcher)
@@ -65,6 +69,21 @@ defmodule Callisto.GraphDB do
 
       def create(vertex=%Callisto.Vertex{}) do
         Callisto.GraphDB.Queryable.create(@adapter, vertex)
+      end
+
+      def create(triple=%Callisto.Triple{}) do
+        Callisto.GraphDB.Queryable.create(@adapter, triple)
+      end
+      def create(from=%Callisto.Vertex{},
+                 edge=%Callisto.Edge{},
+                 to=%Callisto.Vertex{}) do
+        create(Callisto.Triple.new(from: from, to: to, edge: edge))
+      end
+
+      def create_path(from=%Callisto.Vertex{},
+                      edge=%Callisto.Edge{},
+                      to=%Callisto.Vertex{}) do
+        Callisto.GraphDB.Queryable.create(@adapter, %Callisto.Triple{from: from, edge: edge, to: to})
       end
     end
   end
@@ -104,6 +123,7 @@ defmodule Callisto.GraphDB do
       {:ok, 1}
   """
   @callback count(String.t | struct) :: tuple
+  @callback count!(String.t | struct) :: integer | tuple
 
   @doc ~S"""
     Returns true/false if there is at least one element that matches the
@@ -126,10 +146,19 @@ defmodule Callisto.GraphDB do
   @callback get!(Vertex.t | Edge.t, list(String.t | module), map | list | nil) :: list(struct)
 
   @doc ~S"""
-    Creates the vertex, defined by the given Vertex struct, in the database,
-    returns the resulting Vertex.  Returns {:ok, vertex} on success.
+    Creates the given object
+    Given a Vertex, creates the vertex and returns the resulting Vertex.
+    Given a Triple, creates the path and returns the Triple.
+    Returns {:ok, [results]} on success.
   """
-  @callback create(Vertex.t) :: tuple
+  @callback create(Vertex.t | Triple.t) :: tuple
+
+  @doc ~S"""
+    Expects arguments from (vertex), edge (edge), to (vertex).  Simply tosses
+    in a Triple and then creates the edges.  See create()
+    Returns {:ok, [triples]} on success.
+  """
+  @callback create(Vertex.t, Edge.t, Vertex.t) :: tuple
 
   # This takes a returned tuple from Neo4j and a Callisto.Query struct;
   # it looks at the Query's return key and attempts to convert the

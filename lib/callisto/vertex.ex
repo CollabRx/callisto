@@ -40,7 +40,7 @@ defmodule Callisto.Vertex do
   defp normalize_labels(labels) when is_list(labels) do
     Enum.map labels, fn(label) ->
       cond do
-        is_bitstring(label) -> label
+        is_binary(label) || is_nil(label) -> label
         true -> label.__callisto_properties.name
       end
     end

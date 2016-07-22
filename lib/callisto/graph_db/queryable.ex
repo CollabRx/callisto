@@ -1,5 +1,5 @@
 defmodule Callisto.GraphDB.Queryable do
-  alias Callisto.{Edge, Query, Vertex}
+  alias Callisto.{Edge, Query, Triple, Vertex}
 
   def query(adapter, cypher, parser \\ nil) do
     do_query(adapter, cypher, parser)
@@ -36,6 +36,10 @@ defmodule Callisto.GraphDB.Queryable do
              |> Query.returning("count(x)")
     query(adapter, cypher, &(hd(&1)["count(x)"]))
   end
+  def count!(adapter, matcher) do
+    with {:ok, c} <- count(adapter, matcher),
+         do: c
+  end
 
   def exists?(adapter, matcher) do
     cypher = %Query{}
@@ -71,6 +75,20 @@ defmodule Callisto.GraphDB.Queryable do
              |> Query.create(vertex)
              |> Query.returning(x: Vertex, "labels(x)": nil)
     query(adapter, cypher, &deref_all/1)
+  end
+
+  def create(adapter, triple=%Triple{}) do
+    cypher = %Query{}
+             |> Query.match(from: triple.from, to: triple.to)
+             |> Query.create("(from)-#{Edge.to_cypher(triple.edge,"r")}->(to)")
+             |> Query.returning(from: Vertex, "labels(from)": nil,
+                                r: Edge, "type(r)": nil,
+                                to: Vertex, "labels(to)": nil)
+    query(adapter, cypher, fn(rows) ->
+      Enum.map(rows, fn(r) ->
+        Triple.new(from: r["from"], edge: r["r"], to: r["to"])
+      end)
+    end)
   end
 
   defp deref_all(rows, key \\ "x") do

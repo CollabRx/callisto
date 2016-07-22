@@ -22,8 +22,17 @@ defmodule Callisto.Triple do
     "#{v1}-#{edge}->#{v2}"
   end
 
-  def new() do
-    %Triple{}
+  def new(opts \\ %{}) do
+    do_new(opts)
+  end
+  defp do_new(opts) when is_map(opts) do
+    Map.merge(%Triple{}, opts)
+  end
+  defp do_new(opts) when is_list(opts) do
+    case Keyword.keyword?(opts) do
+      true -> do_new(Map.new(opts))
+      _ -> Enum.zip([:from, :edge, :to], opts) |> Map.new
+    end
   end
 end
 
