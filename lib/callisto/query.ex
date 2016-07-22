@@ -33,7 +33,7 @@ defmodule Callisto.Query do
       iex> %Query{} |> Query.match(x: %{id: 42}, y: %{id: 69}) |> to_string
       "MATCH (x {id: 42}), (y {id: 69})"
   """
-  def match(query=%Query{}, pattern) when is_bitstring(pattern) do
+  def match(query=%Query{}, pattern) when is_binary(pattern) do
     %{query | match: pattern }
   end
   def match(query=%Query{}, hash) when is_map(hash) or is_list(hash) do
@@ -49,7 +49,7 @@ defmodule Callisto.Query do
       # iex> %Query{} |> Query.merge(x: Vertex.cast(Medicine, %{name: "foo"})) |> to_string
       "MERGE (x:Disease { name: 'foo' })"
   """
-  def merge(query=%Query{}, pattern) when is_bitstring(pattern) do
+  def merge(query=%Query{}, pattern) when is_binary(pattern) do
     %{query | merge: pattern}
   end
   def merge(query=%Query{}, hash) when is_map(hash) or is_list(hash) do
@@ -64,7 +64,7 @@ defmodule Callisto.Query do
       iex> %Query{} |> Query.create("(x:Disease { id: 42 })") |> to_string
       "CREATE (x:Disease { id: 42 })"
   """
-  def create(query=%Query{}, pattern) when is_bitstring(pattern) do
+  def create(query=%Query{}, pattern) when is_binary(pattern) do
     %{query | create: pattern}
   end
   def create(query=%Query{}, vert=%Vertex{}) do
@@ -90,7 +90,7 @@ defmodule Callisto.Query do
 
     Note the order is different between a Keyword list and a Map.
   """
-  def where(query=%Query{}, clause) when is_bitstring(clause) or is_nil(clause) do
+  def where(query=%Query{}, clause) when is_binary(clause) or is_nil(clause) do
     %{query | where: clause}
   end
   def where(query=%Query{}, hash) when is_map(hash) or is_list(hash) do
@@ -119,7 +119,7 @@ defmodule Callisto.Query do
       "SET x += {name: NULL}"
 
   """
-  def set(query=%Query{}, clause) when is_bitstring(clause) or is_nil(clause) do
+  def set(query=%Query{}, clause) when is_binary(clause) or is_nil(clause) do
     %{query | set: clause, delete: nil}
   end
   def set(query=%Query{}, hash) when is_map(hash) do
@@ -213,7 +213,7 @@ defmodule Callisto.Query do
   def returning(query=%Query{}, hash) when is_map(hash) do
     returning(query, Map.to_list(hash))
   end
-  def returning(query=%Query{}, string) when is_bitstring(string) do
+  def returning(query=%Query{}, string) when is_binary(string) do
     # Split string on commas, then call again as a list...
     parts = String.split(string, ",") |> Enum.map(&(String.strip(&1)))
     returning(query, parts)
@@ -223,7 +223,7 @@ defmodule Callisto.Query do
   end
 
   # Order clause only accepts string or nil.
-  def order(query=%Query{}, clause) when is_bitstring(clause) or is_nil(clause) do
+  def order(query=%Query{}, clause) when is_binary(clause) or is_nil(clause) do
     %{query | order: clause}
   end
 
@@ -277,7 +277,7 @@ defimpl String.Chars, for: Callisto.Query do
   defp limit(num), do: "LIMIT #{num}"
 
   defp return(nil), do: nil
-  defp return(string) when is_bitstring(string) do
+  defp return(string) when is_binary(string) do
     "RETURN #{string}"
   end
   defp return(hash) do

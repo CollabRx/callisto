@@ -31,7 +31,7 @@ defmodule Callisto.Edge do
   """
   def cast(type), do: cast(type, %{})
   def cast(type, data) when is_list(data), do: cast(type, Map.new(data))
-  def cast(type, data) when is_bitstring(type) do
+  def cast(type, data) when is_binary(type) do
     %Edge{props: data, relationship: type, id: data["id"] || data[:id]}
   end
   def cast(type, data) when is_atom(type) do

@@ -52,7 +52,7 @@ defmodule Callisto.Cypher do
       iex> Cypher.escape("don't\tstop\nthinking about tomorrow")
       "don\\'t\\tstop\\nthinking about tomorrow"
   """
-  def escape(value) when is_bitstring(value) do
+  def escape(value) when is_binary(value) do
     String.replace(value, "\\", "\\\\") # REPLACE THESE FIRST!
     |> String.replace("'", "\\'")
     |> String.replace("\t", "\\t")
@@ -61,7 +61,7 @@ defmodule Callisto.Cypher do
   end
   def escape(value) when is_nil(value), do: "NULL"
   def escape(value), do: to_string(value)
-  def escaped_quote(value) when is_bitstring(value), do: "'#{escape(value)}'"
+  def escaped_quote(value) when is_binary(value), do: "'#{escape(value)}'"
   def escaped_quote(value), do: escape(value)
 
   defp labels_suffix([]), do: ""
@@ -78,13 +78,13 @@ defmodule Callisto.Cypher do
            values escaped to NULL, use set_not_nil_values
 
       iex> Cypher.set_values(x: 42, y: "biff", nothing: nil)
-      "{x: 42, y: 'biff', nothing: NULL}"
+      "{nothing: NULL, x: 42, y: 'biff'}"
 
       iex> Cypher.set_values(%{})
       ""
   """
-  def set_values(kwlist) when is_list(kwlist) do
-    Enum.map_join(kwlist, ", ", fn({k,v}) ->
+  def set_values(hash) when is_map(hash) do
+    Enum.map_join(hash, ", ", fn({k,v}) ->
       "#{to_string(k)}: #{escaped_quote(v)}"
     end)
     |> case do
@@ -92,7 +92,7 @@ defmodule Callisto.Cypher do
       stuff -> "{#{stuff}}"
     end
   end
-  def set_values(hash) when is_map(hash), do: set_values(Map.to_list(hash))
+  def set_values(hash) when is_list(hash), do: set_values(Map.new(hash))
 
   @doc ~S"""
     Like set_values/1 but does not include any keys where the value is nil.

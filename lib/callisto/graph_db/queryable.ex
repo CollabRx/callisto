@@ -6,12 +6,12 @@ defmodule Callisto.GraphDB.Queryable do
   end
   # Straight up cypher string, no parser...
   defp do_query(adapter, cypher, parser)
-       when is_bitstring(cypher) and is_nil(parser) do
+       when is_binary(cypher) and is_nil(parser) do
     adapter.query(cypher)
   end
   # Straight up cypher, but with a parsing function
   defp do_query(adapter, cypher, parser)
-      when is_bitstring(cypher) and is_function(parser) do
+      when is_binary(cypher) and is_function(parser) do
     case do_query(adapter, cypher, nil) do
       {:ok, result} -> {:ok, parser.(result) }
       result -> result
@@ -105,9 +105,10 @@ defmodule Callisto.GraphDB.Queryable do
     end)
   end
 
-  def get_or_create(adapter, vertex=%Vertex{}) do
+  def get_or_create(adapter, vertex=%Vertex{}, props) do
     cypher = %Query{}
              |> Query.merge(x: vertex)
+             |> Query.set(on_create: [x: props || vertex.props])
              |> Query.returning(x: Vertex, "labels(x)": nil)
     query(adapter, cypher, &deref_all/1)
   end

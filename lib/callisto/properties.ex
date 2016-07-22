@@ -104,7 +104,7 @@ defmodule Callisto.Properties do
     default value to that key in the map.  Note that this is checking for
     the existence of the key, not the non-nil nature of the value.
   """
-  def apply_defaults(data, type) when is_bitstring(type), do: data
+  def apply_defaults(data, type) when is_binary(type), do: data
   def apply_defaults(data, types) when is_list(types) do
     Enum.reduce(types, data, fn(x, acc) -> apply_defaults(acc, x) end)
   end
@@ -125,7 +125,7 @@ defmodule Callisto.Properties do
     risk polluting the atom cache, and it's safe to pass random hashes through
     this function.
   """
-  def atomize_known_keys(data, type) when is_bitstring(type), do: data
+  def atomize_known_keys(data, type) when is_binary(type), do: data
   def atomize_known_keys(data, types) when is_list(types) do
     Enum.reduce(types, data, fn(x, acc) -> atomize_known_keys(acc, x) end)
   end
@@ -146,7 +146,7 @@ defmodule Callisto.Properties do
     either as atoms or strings.  Does NOT convert string keys to atoms.
     Returns {:ok, []} on success, or {:error, [missing_key, ...]} on error.
   """
-  def validate(_data, type) when is_bitstring(type), do: {:ok, []}
+  def validate(_data, type) when is_binary(type), do: {:ok, []}
   def validate(data, types) when is_list(types) do
     Enum.reduce(types, {:ok, []}, fn(t, {status, errors}) ->
       case validate(data, t) do
@@ -178,7 +178,7 @@ defmodule Callisto.Properties do
     end
   end
 
-  defp cast_values(data, type) when is_bitstring(type), do: data
+  defp cast_values(data, type) when is_binary(type), do: data
   defp cast_values(data, types) when is_list(types) do
     Enum.reduce(types, data, fn(t, acc) -> cast_values(acc, t) end)
   end
@@ -192,7 +192,7 @@ defmodule Callisto.Properties do
                 end)
   end
 
-  def cast_props(type, data) when is_bitstring(type), do: Map.new(data)
+  def cast_props(type, data) when is_binary(type), do: Map.new(data)
   def cast_props(type, data) do
     Map.new(data)
     |> validate!(type)
