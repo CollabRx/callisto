@@ -31,6 +31,22 @@ defmodule Callisto.Mixfile do
       {:inflex, "~> 1.7.0"},
       {:uuid, "~> 1.1"},
       {:mix_test_watch, "~> 0.2", only: :dev},
+      {:ex_doc, github: "elixir-lang/ex_doc"}
+    ]
+  end
+
+  defp description do
+    """
+    Abstraction layer around graph databases and their query languages.
+    """
+  end
+
+  defp package do
+    [name: :callisto,
+     files: ["lib", "priv", "mix.exs", "README*", "readme*", "LICENSE*", "license*"],
+     maintainers: ["...Paul", "Michael Kompanets"],
+     licenses: ["Apache 2.0"],
+     links: %{"GitHub" => "https://github.com/CollabRx/callisto"}
     ]
   end
 end
