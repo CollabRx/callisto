@@ -110,5 +110,8 @@ Things coming soon:
   * Let us know on GitHub if you have any other ideas!
 
  
+## Copyright and License
+Copyright (c) 2016, CollabRx, Inc.
 
+Callisto source code is licensed under [Apache 2 License](LICENSE.md).
 
