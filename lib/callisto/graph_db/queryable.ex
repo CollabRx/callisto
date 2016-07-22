@@ -50,20 +50,34 @@ defmodule Callisto.GraphDB.Queryable do
     Enum.count(c) > 0
   end
 
+  # Convert properties to map.
   def get(adapter, kind, labels, props) when is_list(props) do
     get(adapter, kind, labels, Map.new(props))
   end
-  def get(adapter, kind=Vertex, labels, props) do
+  # If passed a non-blank ID in the hash...
+  def get(adapter, kind, labels, %{id: id}) when is_nil(id) != true do
+    get_by_id(adapter, kind, labels, id)
+  end
+  # ...or a straight up integer or string value, get by ID.
+  def get(adapter, kind, labels, id) when is_binary(id) or is_integer(id) do
+    get_by_id(adapter, kind, labels, id)
+  end
+  # Otherwise, get based on the given properties.
+  def get(adapter, kind, labels, props), do: do_get(adapter, kind, labels, props)
+  def do_get(adapter, kind=Vertex, labels, props) do
     query = %Query{}
             |> Query.match(x: kind.cast(labels, props))
             |> Query.returning(x: kind, "labels(x)": nil)
     query(adapter, query, &deref_all/1)
   end
-  def get(adapter, kind=Edge, labels, props) do
+  def do_get(adapter, kind=Edge, labels, props) do
     query = %Query{}
             |> Query.match(x: kind.cast(labels, props))
             |> Query.returning(x: kind, "type(x)": nil)
     query(adapter, query, &deref_all/1)
+  end
+  def get_by_id(adapter, kind, labels, id) do
+    do_get(adapter, kind, labels, %{id: id})
   end
   def get!(adapter, kind, labels, props) do
     with {:ok, rows} <- get(adapter, kind, labels, props),

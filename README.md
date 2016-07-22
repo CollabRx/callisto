@@ -106,14 +106,16 @@ Things coming soon:
 
   * Actually write things to the database with nice CRUD functions (theoretically, you can already write things by crafting your own queries, but we figure it'd be good to be able to do something like "Vertex.new(Foo) |> Graph.save()"
   * Better 'changeset' handling
-  * Ability to automagically insert an ID into Vertex and Edge props when they are created in the database (because Neo4j doesn't really have a good 'autoincrement ID' feature to uniquely and consistently identify specific nodes/relationships).
   * Let us know on GitHub if you have any other ideas!
 
 ## Running tests
 
-  To run tests use `mix test`.  
+  To run tests use `mix test` (to run once and exit) or `mix test.watch` (to
+  run and wait for changes, then repeat, see https://hex.pm/packages/mix_test_watch 
 
   To run tests that generate coverage reports, use `mix test --cover`.  By default HTML-based reports are written to the the `cover` folder, and text-based summaries are written to console.
+
+  
 
 ## Copyright and License
 

@@ -18,7 +18,7 @@ defmodule Callisto.PropertiesTest do
   test "defines properties on relationship struct" do
     relationship = struct(HasMedicine)
     field_names = Map.keys(relationship)
-    assert field_names == [:__struct__, :amount, :id]
+    assert field_names == [:__struct__, :amount]
     assert HasMedicine.__callisto_properties.name == "has_medicine"
     assert Properties.__callisto_properties(relationship).name == "has_medicine"
   end
@@ -50,7 +50,7 @@ defmodule Callisto.PropertiesTest do
         field :foo, :string
       end
     end
-    assert PropertyTestBar.__callisto_properties.id == :string
+    assert PropertyTestBar.__callisto_properties.id == :uuid
     assert Map.keys(struct(PropertyTestBar)) == [:__struct__, :foo, :id]
   end
 

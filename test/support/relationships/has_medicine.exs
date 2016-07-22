@@ -1,7 +1,7 @@
 defmodule HasMedicine do
   use Callisto.Properties
 
-  properties do
+  properties id: false do
     name "has_medicine"
     field :amount, :integer
   end

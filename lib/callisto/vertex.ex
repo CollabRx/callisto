@@ -7,11 +7,8 @@ defmodule Callisto.Vertex do
   alias Callisto.{Cypher, Properties}
 
   defstruct id: nil, props: %{}, labels: [], validators: []
-  # NOTE:  id is made "special" here, but its use is non-specific.
-  #        In some systems, it could be populated with an internal, persistent
-  #        ID that can be used to identify a specific entity in the graph
-  #        database, or it could mirror an ID field in the properties, which
-  #        is self-managed, or it can just be ignored.
+  # NOTE:  id is made "special" here; it's intended to mirror the :id key
+  #        from props.
 
   def to_cypher(v, name \\ "v") do
     "(#{Cypher.matcher(name, v.labels, v.props)})"
@@ -26,6 +23,7 @@ defmodule Callisto.Vertex do
   def new(labels, data) when is_list(labels) != true, do: new([labels], data)
   def new(labels, data) do
     %{ cast(labels, data) | props: Properties.cast_props(labels, data) }
+    |> Properties.denormalize_id
   end
 
   def cast(labels), do: cast(labels, %{})
@@ -34,7 +32,8 @@ defmodule Callisto.Vertex do
   def cast(labels, data) do
     %Vertex{validators: labels,
             labels: normalize_labels(labels),
-            props: data }
+            props: data,
+            id: data["id"] || data[:id] }
   end
 
   defp normalize_labels(labels) when is_list(labels) do
@@ -46,13 +45,6 @@ defmodule Callisto.Vertex do
     end
   end
   defp normalize_labels(labels), do: normalize_labels([labels])
-
-#  def create(v = %Vertex{}) do
-#    %Query{create: to_cypher(v, "v")}
-#    |> Query.returning(v: true)
-#    |> ????
-#
-#  end
 
 end
 

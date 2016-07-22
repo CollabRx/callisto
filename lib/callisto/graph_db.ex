@@ -141,12 +141,18 @@ defmodule Callisto.GraphDB do
 
   @doc ~S"""
     Constructs query to return objects of type <type> (Vertex or Edge),
-    with label(s) <labels>, and optionally properties <props>.  Returns
+    with label(s) <labels>, and optionally properties or ID.  Returns
     tuple from query(), but on success, second element of tuple is a list
     of results cast into the appropriate structs (Vertex or Edge).
+
+    The last argument, if provided, is expected to be a hash of property
+    values to match against.  These values are completely ignored, though,
+    if the hash has an :id key -- in that case, or if the last argument is
+    a string or integer, the only property that will be searched against is
+    the ID given.
   """
-  @callback get(Vertex.t | Edge.t, list(String.t | module), map | list | nil) :: tuple
-  @callback get!(Vertex.t | Edge.t, list(String.t | module), map | list | nil) :: list(struct)
+  @callback get(Vertex.t | Edge.t, list(String.t | module), any) :: tuple
+  @callback get!(Vertex.t | Edge.t, list(String.t | module), any) :: list(struct)
 
   @doc ~S"""
     Creates the given object

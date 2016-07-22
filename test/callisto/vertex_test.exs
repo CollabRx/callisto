@@ -86,4 +86,41 @@ defmodule Callisto.VertexTest do
     assert vertex.labels == ["Medicine", "Treatment"]
   end
 
+  describe "auto ID assignment" do
+    test "Properties that define id as UUID will auto-assign value unless set" do
+      defmodule AutoID do
+        use Callisto.Properties
+        properties id: :uuid do 
+          field :thing, :string
+        end
+      end
+
+      assert AutoID.__callisto_properties.id == :uuid
+
+      v = Vertex.new(AutoID)
+      assert v.id, inspect(v)
+      
+      %Vertex{id: id, props: props} = Vertex.new(AutoID, id: "foo")
+      assert props.id == "foo"
+      assert id == "foo"
+    end
+
+    test "Properties that defined a function for UUID work" do
+      defmodule FuncID do
+        use Callisto.Properties
+        def uuid(_obj), do: "foo"
+        properties id: &FuncID.uuid/1 do
+          field :thing, :string
+        end
+      end
+
+      assert is_function(FuncID.__callisto_properties.id)
+      v = Vertex.new(FuncID)
+      assert v.id == "foo", inspect(v)
+
+      v = Vertex.new(FuncID, id: "bar")
+      assert v.id == "bar", inspect(v)        
+    end
+  end
+
 end

@@ -4,6 +4,8 @@ defmodule Callisto.Mixfile do
   def project do
     [app: :callisto,
      version: "0.1.0",
+     description: description(),
+     package: package(),
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,

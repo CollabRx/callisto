@@ -1,7 +1,40 @@
 defmodule Callisto.Properties do
+  @moduledoc """
+    Module for defining properties on a struct.  Macro properties lets you
+    define fields that are "known" to the vertex that uses this as a label
+    (or the edge that uses this as a type).  You can define if these fields
+    are required to be set when calling .new(), or if they have default
+    values that should be inserted.
+
+    By default the last "part" of the module name is used as the label/type
+    in the database, but this can be overridden with the name() call in the
+    properties block.
+
+    The properties call takes an optional id: key, which can be set to choose
+    how/if IDs are automatically applied:
+      * `:uuid` - (default) applies a UUID from the default generator
+      * `func/1` - An arity 1 function can be given, and will be called with the object getting ID'd -- you can define your own UUID generator this way.
+      * `nil`/`false` - No ID will be set
+
+    ## Example
+
+    defmodule MyVertex do
+      use Callisto.Properties
+
+      def my_uuid(_obj), do: "foo" # Stupid, all IDs will be "foo"!
+
+      properties id: &my_uuid/1 do
+        name "my_vertex"  # Default would be "MyVertex"
+        field :thing, :integer, required: true
+        field :other, :string, default: "foo"
+      end
+    end
+  """
+
+
   require Inflex
 
-  alias Callisto.Type
+  alias Callisto.{Edge, Type, Vertex}
 
   defmacro __using__(_) do
     quote do
@@ -10,8 +43,8 @@ defmodule Callisto.Properties do
     end
   end
 
-  defmacro properties(options \\ [id: :string], [do: block]) do
-    id_option = Keyword.get(options, :id, :string)
+  defmacro properties(options \\ [id: :uuid], [do: block]) do
+    id_option = Keyword.get(options, :id, :uuid)
     quote do
       try do
         import Callisto.Properties
@@ -165,6 +198,28 @@ defmodule Callisto.Properties do
     |> validate!(type)
     |> apply_defaults(type)
     |> cast_values(type)
+  end
+
+  # The ID set on the object directly takes precedence; make sure it's in the
+  # props hash.
+  def denormalize_id(v=%{ id: id }) when is_nil(id) == false do
+    %{ v | props: Map.put(v.props, :id, id) }
+  end
+  # If set in the props, but not on the object, copy it over.
+  def denormalize_id(v=%{ props: %{id: id}}), do: %{ v | id: id }
+  # Otherwise, figure out if/how we need to assign the ID.
+  def denormalize_id(v=%Vertex{}), do: assign_id(v.validators, v)
+  def denormalize_id(e=%Edge{}), do: assign_id([e.type], e)
+  defp assign_id([], v), do: v
+  defp assign_id([label|rest], v)
+       when is_binary(label) or is_nil(label), do: assign_id(rest, v)
+  defp assign_id([label|rest], v) do
+    id = label.__callisto_properties.id
+    cond do
+      is_function(id) -> %{ v | props: Map.put(v.props, :id, id.(v)) } |> denormalize_id
+      id == :uuid -> %{ v | props: Map.put(v.props, :id, UUID.uuid1) } |> denormalize_id
+      true -> assign_id(rest, v)
+    end
   end
 
 end
