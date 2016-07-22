@@ -18,3 +18,5 @@ erl_crash.dump
 
 # Ignore vi swap files.
 *.swp
+cover
+.pre-commit-config.yaml
