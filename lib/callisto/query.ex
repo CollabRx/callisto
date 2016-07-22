@@ -141,11 +141,38 @@ defmodule Callisto.Query do
     "#{to_string x} += #{Cypher.set_values(y)}"
   end
 
-  def delete(query=%Query{}, vars) when is_list(vars) do
-    %{query | set: nil, delete: vars}
+  @doc ~S"""
+    Assigns the DELETE clause in the Cypher query.  Pass an array of elements
+    to DELETE -- if you use the keyword detach: to identify the list, the
+    elements will be detached instead.
+
+    ## Examples
+
+    Example of manually setting the clause directly...
+      iex> %Query{} |> Query.delete("x") |> to_string
+      "DELETE x"
+
+    Example of passing a Map of Maps (top-level keys are the matched
+    entities, the map value is the key/value maps to update)
+      iex> %Query{} |> Query.delete(["x", "y"])|> to_string
+      "DELETE x,y"
+
+    Examples of detaching
+      iex> %Query{} |> Query.delete(detach: "x")|> to_string
+      "DETACH DELETE x"
+      iex> %Query{} |> Query.delete(detach: ["x", "y"])|> to_string
+      "DETACH DELETE x,y"
+
+
+  """
+  def delete(q=%Query{}, detach: v) when is_list(v) do
+    do_delete(q, %{detach: v})
   end
-  def delete(query=%Query{}, var) do
-    delete(query, [var])
+  def delete(q=%Query{}, detach: v), do: delete(q, detach: [v])
+  def delete(q=%Query{}, v) when is_list(v) != true, do: delete(q, [v])
+  def delete(q=%Query{}, v), do: do_delete(q, v)
+  defp do_delete(q=%Query{}, v) do
+    %{q | set: nil, delete: v}
   end
 
   # Set the return hash -- should be variable name => type (or nil)
@@ -242,7 +269,8 @@ defimpl String.Chars, for: Callisto.Query do
   end
   defp set(clause), do: "SET #{clause}"
   defp delete(nil), do: nil
-  defp delete(array), do: "DETACH DELETE #{Enum.join(array, ",")}"
+  defp delete(array) when is_list(array), do: "DELETE #{Enum.join(array, ",")}"
+  defp delete(%{detach: array}), do: "DETACH #{delete(array)}"
   defp order(nil), do: nil
   defp order(clause), do: "ORDER BY #{clause}"
   defp limit(nil), do: nil

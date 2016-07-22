@@ -80,11 +80,10 @@ defmodule Callisto.GraphDB do
         create(Callisto.Triple.new(from: from, to: to, edge: edge))
       end
 
-      def create_path(from=%Callisto.Vertex{},
-                      edge=%Callisto.Edge{},
-                      to=%Callisto.Vertex{}) do
-        Callisto.GraphDB.Queryable.create(@adapter, %Callisto.Triple{from: from, edge: edge, to: to})
+      def delete(vertex=%Callisto.Vertex{}, opts \\ []) do
+        Callisto.GraphDB.Queryable.delete(@adapter, vertex, opts)
       end
+
     end
   end
 
@@ -159,6 +158,18 @@ defmodule Callisto.GraphDB do
     Returns {:ok, [triples]} on success.
   """
   @callback create(Vertex.t, Edge.t, Vertex.t) :: tuple
+
+  @doc ~S"""
+    Deletes all vertices that match. Returns {:ok, []} on success (on success,
+    the right side is always an empty list.)
+
+    If detach: true is passed along, will delete the vertex and any remaining
+    edges attached to it (by default, will not detach)
+
+    Graph.delete(Vertex.new("Foo"), detach: true)
+    Cypher: "MATCH (x:Foo) DETACH DELETE x"
+  """
+  @callback delete(Vertex.t, keyword) :: tuple
 
   # This takes a returned tuple from Neo4j and a Callisto.Query struct;
   # it looks at the Query's return key and attempts to convert the

@@ -94,5 +94,14 @@ defmodule Callisto.GraphDB.Queryable do
   defp deref_all(rows, key \\ "x") do
     Enum.map(rows, &(&1[key]))
   end
+
+  def delete(adapter, vertex=%Vertex{}, opts) do
+    cypher = %Query{}
+             |> Query.match(x: vertex)
+             |> Query.delete(if(Keyword.get(opts, :detach),
+                                do: [detach: :x],
+                                else: :x))
+    query(adapter, cypher)
+  end
          
 end
