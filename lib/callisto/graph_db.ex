@@ -39,10 +39,26 @@ defmodule Callisto.GraphDB do
         raise ArgumentError, "missing :adapter configuration in config #{inspect @otp_app}, #{inspect __MODULE__}"
       end
 
+      def config do
+        @config
+      end
+
+      def __adapter__ do
+        @adapter
+      end
+
+      def start_link(opts \\ []) do
+        Callisto.GraphDB.Supervisor.start_link(__MODULE__, @otp_app, @adapter, opts)
+      end
+
+      def stop(pid, timeout \\ 5000) do
+        Supervisor.stop(pid, :normal, timeout)
+      end
+
       def query(cypher, parser \\ nil) do
         Callisto.GraphDB.Queryable.query(@adapter, cypher, parser)
       end
-        
+
       def query!(cypher, parser \\ nil) do
         Callisto.GraphDB.Queryable.query!(@adapter, cypher, parser)
       end
@@ -53,7 +69,7 @@ defmodule Callisto.GraphDB do
       def count!(matcher) do
         Callisto.GraphDB.Queryable.count!(@adapter, matcher)
       end
-       
+
 
       def exists?(matcher) do
         Callisto.GraphDB.Queryable.exists?(@adapter, matcher)
@@ -193,12 +209,42 @@ defmodule Callisto.GraphDB do
   """
   @callback delete(Vertex.t, keyword) :: tuple
 
+  @doc """
+  Returns the adapter tied to the repository.
+  """
+  @callback __adapter__ :: Ecto.Adapter.t
+
+  @doc """
+  Returns the adapter configuration stored in the `:otp_app` environment.
+  """
+  @callback config() :: Keyword.t
+
+  @doc """
+  Starts any connection pooling or supervision and return `{:ok, pid}`
+  or just `:ok` if nothing needs to be done.
+
+  Returns `{:error, {:already_started, pid}}` if the repo is already
+  started or `{:error, term}` in case anything else goes wrong.
+
+  ## Options
+  See the configuration in the moduledoc for options shared between adapters,
+  for adapter-specific configuration see the adapter's documentation.
+  """
+  @callback start_link(opts :: Keyword.t) :: {:ok, pid} |
+                            {:error, {:already_started, pid}} |
+                            {:error, term}
+
+  @doc """
+  Shuts down the repository represented by the given pid.
+  """
+  @callback stop(pid, timeout) :: :ok
+
   # This takes a returned tuple from Neo4j and a Callisto.Query struct;
   # it looks at the Query's return key and attempts to convert the
   # returned data to the matching structs (if indicated).  If there's
   # no struct given for a key, it is unchanged.  Finally, returns
   # the tuple with the updated results.
-  def handle_return(rows, %Query{return: returning}) 
+  def handle_return(rows, %Query{return: returning})
        when is_list(returning) do
     Enum.map rows, fn(row) ->
       Enum.map(returning, fn({k, v}) ->
