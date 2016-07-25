@@ -111,7 +111,12 @@ defmodule Callisto.Properties do
   def apply_defaults(data, type) do
     type.__callisto_properties.fields
     |> Enum.filter(fn({_, value}) -> Keyword.has_key?(value, :default) end)
-    |> Enum.map(fn({key, value}) -> {key, value[:default]} end)
+    |> Enum.map(fn({key, value}) ->
+       cond do
+         is_function(value[:default]) -> {key, value[:default].(data)}
+         true -> {key, value[:default]}
+       end
+    end)
     |> Map.new
     |> Map.merge(atomize_known_keys(data, type))
   end

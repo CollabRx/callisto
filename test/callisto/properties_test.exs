@@ -1,7 +1,7 @@
 defmodule Callisto.PropertiesTest do
   use ExUnit.Case
 
-  alias Callisto.{Properties, Type}
+  alias Callisto.{Properties, Type, Vertex}
 
   doctest Type
   doctest Properties
@@ -63,5 +63,23 @@ defmodule Callisto.PropertiesTest do
     end
     assert PropertyTestBiff.__callisto_properties.id == false
     assert Map.keys(struct(PropertyTestBiff)) == [:__struct__, :foo]
+  end
+
+  test "can pass a function as a default" do
+    defmodule PropertyTestFuncDefault do
+      use Callisto.Properties
+
+      properties id: false do
+        field :foo, :string
+        field :lower, :string,
+                      default: &PropertyTestFuncDefault.default_lower/1
+      end
+
+      def default_lower(data) do
+        String.downcase(to_string(data[:foo]))
+      end
+    end
+    x = Vertex.new(PropertyTestFuncDefault, foo: "UPCASE")
+    assert x.props.lower == "upcase"
   end
 end

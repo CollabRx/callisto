@@ -1,23 +1,14 @@
 # Callisto
 
-An Elixir library for managing graph database records with Cypher.
+  An Elixir library for managing graph database records with Cypher.
 
-While it shares some similarities with Ecto, it's also a different beast.
-Graph databases tend to be schemaless, so defining schemas on top of nodes
-isn't always useful.  In addition, nodes and relationships (Vertex and Edge
-here) have two kinds of data:  labels/type and properties.  A Vertex can
-have multiple labels.  While a label/type can be thought of like a table
-name, they aren't exactly the same.  A Vertex can have multiple labels, and
-not all labels have to have the same mix of labels.  It's entirely possible
-for one Vertex to have a Foo label, another to have a Foo AND Bar label, and
-another to have a Bar label.
+  While it shares some similarities with Ecto, it's also a different beast.  Graph databases tend to be schemaless, so defining schemas on top of nodes isn't always useful.  In addition, nodes and relationships (Vertex and Edge here) have two kinds of data:  labels/type and properties.  A Vertex can have multiple labels.  While a label/type can be thought of like a table name, they aren't exactly the same.  A Vertex can have multiple labels, and not all labels have to have the same mix of labels.  It's entirely possible for one Vertex to have a Foo label, another to have a Foo AND Bar label, and another to have a Bar label.
 
-So, we work with Vertex and Edge structures all the time, but you can define
-modules to use Properties and they can be used as structures and validators.
+  So, we work with Vertex and Edge structures all the time, but you can define modules to use Properties and they can be used as structures and validators.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+  If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
 
   1. Add `callisto` to your list of dependencies in `mix.exs`:
 
@@ -37,10 +28,7 @@ If [available in Hex](https://hex.pm/docs/publish), the package can be installed
 
 ## Set up your repository
 
-To avoid confusion with Ecto repositories (and we figure it's quite likely an
-app will have connections to both a conventional SQL or NoSQL database AND a
-graph database), the Callisto repository is Callisto.GraphDB.  Set up your
-local graph DB handle:
+  To avoid confusion with Ecto repositories (and we figure it's quite likely an app will have connections to both a conventional SQL or NoSQL database AND a graph database), the Callisto repository is Callisto.GraphDB.  Set up your local graph DB handle:
 
   ```elixir
   defmodule MyApp.Graph do
@@ -50,14 +38,13 @@ local graph DB handle:
 
 ## Query for stuff
 
-You should be able to pass Cypher queries into your graph now, and get back
-a list of hashes, if anything was returned:
+  You should be able to pass Cypher queries into your graph now, and get back a list of hashes, if anything was returned:
 
   ```elixir
   MyApp.Graph.query("MATCH (v:Foo) RETURN v")
   ```
 
-But that's where Callisto.Query comes in -- it's intended to represent a query as component parts, which can be reworked over time.  It's also ready to automagically convert Vertex and Edge records into match constructs:
+  But that's where Callisto.Query comes in -- it's intended to represent a query as component parts, which can be reworked over time.  It's also ready to automagically convert Vertex and Edge records into match constructs:
 
   ```elixir
   alias Callisto{Query, Vertex}
@@ -68,22 +55,25 @@ But that's where Callisto.Query comes in -- it's intended to represent a query a
   MyApp.Graph.query(query)
   ```
 
-If you `to_string` the query, you can see the cypher that results:
+  If you `to_string` the query, you can see the cypher that results:
 
   ```MATCH (vert:Foo {id: 42}) RETURN vert```
 
 ## Properties
 
-If you need to validate that your vertices (or edges) have specific properties, or if you want to default properties on them when they are instanced, you can define a properties module, then pass this as a label (or type for edge) and the system will automagically use it to check for fields.
+  If you need to validate that your vertices (or edges) have specific properties, or if you want to default properties on them when they are instanced, you can define a properties module, then pass this as a label (or type for edge) and the system will automagically use it to check for fields.
 
   ```elixir
   defmodule MyApp.FooVertex do
     use Callisto.Properties
 
+    def gen_search_key(data), do: to_string(data.biff) |> String.downcase
+
     properties id: false, do
       name: "Foo", # Defaults to last term of module, FooVertex
       field: :bar, :integer, default: 42
       field: :biff, :string, required: true
+      field: :search_key, :string, default: &gen_search_key/1
     end
   end
 
@@ -91,18 +81,17 @@ If you need to validate that your vertices (or edges) have specific properties, 
   Cypher.to_cypher(foo) # "(x:Foo {bar: 42, biff: 'boom'})"
   ```
 
-Required means the key HAS to be provided when calling new(); default
-will only apply if the key does not exist AFTER validation.  (NOTE:  This is very likely to change, it's under discussion)
+  Required means the key HAS to be provided when calling new(); default will only apply if the key does not exist AFTER validation.  It can take a function argument; this is expected to be a 1-arity function, which will be passed the properties hash.  In the above example, the search_key will be defaulted to the downcased version of of the :biff field.
 
-If you want to instance a Vertex with a specific Properties struct, but don't want to apply the defaults or validations yet (for example, because you're pulling data from the database that may not be valid according to the latest implementation), you can use `cast` instead of `new`.
+  If you want to instance a Vertex with a specific Properties struct, but don't want to apply the defaults or validations yet (for example, because you're pulling data from the database that may not be valid according to the latest implementation), you can use `cast` instead of `new`.
 
-Fields defined in a properties block will be converted to atom keys in the props Map stored on the Vertex/Edge struct -- string keys in the Map that are not fields will be left as strings, so as not to pollute the atom space.
+  Fields defined in a properties block will be converted to atom keys in the props Map stored on the Vertex/Edge struct -- string keys in the Map that are not fields will be left as strings, so as not to pollute the atom space.
 
 ## Work in Progress
 
-This API is evolving as we are starting to use it for an application we're building.  No guarantee we won't completely redo some of the concepts tomorrow.
+  This API is evolving as we are starting to use it for an application we're building.  No guarantee we won't completely redo some of the concepts tomorrow.
 
-Things coming soon:
+  Things coming soon:
 
   * Actually write things to the database with nice CRUD functions (theoretically, you can already write things by crafting your own queries, but we figure it'd be good to be able to do something like "Vertex.new(Foo) |> Graph.save()"
   * Better 'changeset' handling
@@ -119,6 +108,6 @@ Things coming soon:
 
 ## Copyright and License
 
-Copyright (c) 2016, CollabRx, Inc.
+  Copyright (c) 2016, CollabRx, Inc.
 
-Callisto source code is licensed under [Apache 2 License](LICENSE.md).
+  Callisto source code is licensed under [Apache 2 License](LICENSE.md).
