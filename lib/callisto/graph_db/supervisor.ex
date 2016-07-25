@@ -10,7 +10,6 @@ defmodule Callisto.GraphDB.Supervisor do
   def start_link(repo, otp_app, adapter, opts) do
     opts = config(repo, otp_app, opts)
     name = opts[:name] || Application.get_env(otp_app, repo)[:name] || repo
-    IO.inspect(__MODULE__)
     Supervisor.start_link(__MODULE__, {repo, otp_app, adapter, opts}, [name: name])
   end
 
