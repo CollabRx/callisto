@@ -65,16 +65,16 @@ defmodule Callisto.GraphDB.Queryable do
   # Otherwise, get based on the given properties.
   def get(adapter, kind, labels, props), do: do_get(adapter, kind, labels, props)
   def do_get(adapter, kind=Vertex, labels, props) do
-    query = %Query{}
-            |> Query.match(x: kind.cast(labels, props))
-            |> Query.returning(x: kind, "labels(x)": nil)
-    query(adapter, query, &deref_all/1)
+    cypher = %Query{}
+             |> Query.match(x: kind.cast(labels, props))
+             |> Query.returning(x: kind, "labels(x)": nil)
+    query(adapter, cypher, &deref_all/1)
   end
   def do_get(adapter, kind=Edge, labels, props) do
-    query = %Query{}
-            |> Query.match(x: kind.cast(labels, props))
-            |> Query.returning(x: kind, "type(x)": nil)
-    query(adapter, query, &deref_all/1)
+    cypher = %Query{}
+             |> Query.match(x: kind.cast(labels, props))
+             |> Query.returning(x: kind, "type(x)": nil)
+    query(adapter, cypher, &deref_all/1)
   end
   def get_by_id(adapter, kind, labels, id) do
     do_get(adapter, kind, labels, %{id: id})
@@ -82,6 +82,13 @@ defmodule Callisto.GraphDB.Queryable do
   def get!(adapter, kind, labels, props) do
     with {:ok, rows} <- get(adapter, kind, labels, props),
          do: rows
+  end
+
+  def get_path(adapter, from=%Vertex{}, to=%Vertex{}, edge=%Edge{}) do
+    cypher = %Query{}
+             |> Query.match("#{Vertex.to_cypher(from, "from")}-#{Edge.to_cypher(edge, "x")}->#{Vertex.to_cypher(to, "to")}")
+             |> Query.returning(x: Edge, "type(x)": nil)
+    query(adapter, cypher, &deref_all/1)
   end
 
   def create(adapter, vertex=%Vertex{}) do

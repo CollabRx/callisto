@@ -83,6 +83,10 @@ defmodule Callisto.GraphDB do
         Callisto.GraphDB.Queryable.get!(@adapter, finder, labels, props)
       end
 
+      def get_path(from, to, edge) do
+        Callisto.GraphDB.Queryable.get_path(@adapter, from, to, edge)
+      end
+
       def create(vertex=%Callisto.Vertex{}) do
         Callisto.GraphDB.Queryable.create(@adapter, vertex)
       end
@@ -173,6 +177,12 @@ defmodule Callisto.GraphDB do
   """
   @callback get(Vertex.t | Edge.t, list(String.t | module), any) :: tuple
   @callback get!(Vertex.t | Edge.t, list(String.t | module), any) :: list(struct)
+
+  @doc ~S"""
+    Returns all Edges that match the third argument, linking from the first
+    to second vertices.
+  """
+  @callback get_path(Vertex.t, Vertex.t, Edge.t) :: tuple
 
   @doc ~S"""
     Creates the given object
