@@ -26,6 +26,37 @@
     end
     ```
 
+## Configuration
+
+  You'll need to add to your `config.exs` (or `dev.exs`, etc) the configuration for your graph database.  Here's an example when using Neo4j:
+
+  ```elixir
+  config :my_app, MyApp.Graph,
+    adapter: Callisto.Adapters.Neo4j,
+    url: "http://localhost:7474",
+    pool_size: 5,
+    max_overflow: 2,
+    timeout: 30
+  ```
+
+  Then you'll want to add it to your application and supervisor tree
+
+  ```
+  # in mix.exs
+  def application do
+    [mod: {MyApp, []},
+     applications: [:neo4j_sips, :callisto]] # Presumes you're using Neo4j.
+  end
+  ```
+
+  ```elixir
+  # in lib/my_app.ex
+  children = [
+    ...
+    supervisor(MyApp.Graph, []),
+  ]
+  ```
+
 ## Set up your repository
 
   To avoid confusion with Ecto repositories (and we figure it's quite likely an app will have connections to both a conventional SQL or NoSQL database AND a graph database), the Callisto repository is Callisto.GraphDB.  Set up your local graph DB handle:
