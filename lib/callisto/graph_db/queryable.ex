@@ -125,5 +125,12 @@ defmodule Callisto.GraphDB.Queryable do
                                 else: :x))
     query(adapter, cypher)
   end
-         
+
+  def update(adapter, vertex=%Vertex{}, opts) do
+    cypher = %Query{}
+             |> Query.match(x: vertex)
+             |> Query.set(x: opts || vertex.props)
+             |> Query.returning(x: Vertex, "labels(x)": nil)
+    query(adapter, cypher)
+  end
 end

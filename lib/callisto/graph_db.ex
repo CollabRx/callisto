@@ -104,6 +104,10 @@ defmodule Callisto.GraphDB do
         Callisto.GraphDB.Queryable.delete(@adapter, vertex, opts)
       end
 
+      def update(vertex=%Callisto.Vertex{}, opts \\ nil) do
+        Callisto.GraphDB.Queryable.update(@adapter, vertex, opts)
+      end
+
     end
   end
 
@@ -208,6 +212,15 @@ defmodule Callisto.GraphDB do
     Cypher: "MATCH (x:Foo) DETACH DELETE x"
   """
   @callback delete(Vertex.t, keyword) :: tuple
+
+  @doc ~S"""
+    Matches the vertex, by ID alone if the :id property exists, and
+    updates the properties on that vertex:  If the second argument is
+    given, that hash is set on the properties (does not delete existing
+    properties, but will overwrite matching keys).  If not, will use the
+    properties from the Vertex struct used to match.
+  """
+  @callback update(Vertex.t, keyword | map | none) :: tuple
 
   @doc """
   Returns the adapter tied to the repository.
