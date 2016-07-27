@@ -10,7 +10,8 @@ defmodule Callisto.Query do
             delete: nil,
             order: nil,
             limit: nil,
-            return: nil
+            return: nil,
+            piped_queries: []
 
   def new do
     %Query{}
@@ -33,8 +34,9 @@ defmodule Callisto.Query do
       iex> %Query{} |> Query.match(x: %{id: 42}, y: %{id: 69}) |> to_string
       "MATCH (x {id: 42}), (y {id: 69})"
   """
+  def match(pattern), do: match(%Query{}, pattern)
   def match(query=%Query{}, pattern) when is_binary(pattern) do
-    %{query | match: pattern }
+    %Query{match: pattern, piped_queries: append_query(query)}
   end
   def match(query=%Query{}, hash) when is_map(hash) or is_list(hash) do
     pattern = Enum.map(hash, fn({k, v}) -> Cypher.to_cypher(v, k) end)
@@ -49,8 +51,9 @@ defmodule Callisto.Query do
       # iex> %Query{} |> Query.merge(x: Vertex.cast(Medicine, %{name: "foo"})) |> to_string
       "MERGE (x:Disease { name: 'foo' })"
   """
+  def merge(pattern), do: merge(%Query{}, pattern)
   def merge(query=%Query{}, pattern) when is_binary(pattern) do
-    %{query | merge: pattern}
+    %Query{merge: pattern, piped_queries: append_query(query)}
   end
   def merge(query=%Query{}, hash) when is_map(hash) or is_list(hash) do
     pattern = Enum.map(hash, fn{k, v} -> Cypher.to_cypher(v, k) end)
@@ -64,11 +67,13 @@ defmodule Callisto.Query do
       iex> %Query{} |> Query.create("(x:Disease { id: 42 })") |> to_string
       "CREATE (x:Disease { id: 42 })"
   """
+  def create(pattern), do: create(%Query{}, pattern)
   def create(query=%Query{}, pattern) when is_binary(pattern) do
-    %{query | create: pattern}
+    %Query{create: pattern, piped_queries: append_query(query)}
   end
   def create(query=%Query{}, vert=%Vertex{}) do
-    %{query | create: Cypher.to_cypher(vert)}
+    pattern = Cypher.to_cypher(vert)
+    create(query, pattern)
   end
 
   # If you set the query to a string or nil, just accept it directly
@@ -90,11 +95,12 @@ defmodule Callisto.Query do
 
     Note the order is different between a Keyword list and a Map.
   """
+  def where(clause), do: where(%Query{}, clause)
   def where(query=%Query{}, clause) when is_binary(clause) or is_nil(clause) do
-    %{query | where: clause}
+    %Query{where: clause, piped_queries: append_query(query)}
   end
   def where(query=%Query{}, hash) when is_map(hash) or is_list(hash) do
-    clause = 
+    clause =
       Enum.map(hash, fn(x) -> "#{hd(Tuple.to_list(x))} = #{Tuple.to_list(x)|>List.last|>Cypher.escaped_quote}" end)
       |> Enum.join(") AND (")
     where(query, "(" <> clause <> ")")
@@ -119,8 +125,9 @@ defmodule Callisto.Query do
       "SET x += {name: NULL}"
 
   """
+  def set(clause), do: set(%Query{}, clause)
   def set(query=%Query{}, clause) when is_binary(clause) or is_nil(clause) do
-    %{query | set: clause, delete: nil}
+    %Query{set: clause, piped_queries: append_query(query)}
   end
   def set(query=%Query{}, hash) when is_map(hash) do
     set(query, Map.to_list(hash))
@@ -129,13 +136,13 @@ defmodule Callisto.Query do
     clauses = Keyword.take(kwlist, [:on_create, :on_match])
     case clauses do
       [] -> set(query, Enum.map(kwlist, &set_one/1) |> Enum.join(", "))
-      clauses -> set_on_clauses(query, clauses)
+      clauses -> %Query{set: set_on_multiple(clauses), piped_queries: append_query(query)}
     end
   end
-  defp set_on_clauses(query=%Query{}, clauses) do
-    %{query | set: Enum.map(clauses, fn({x,y}) ->
+  defp set_on_multiple(clauses) do
+    Enum.map(clauses, fn({x,y}) ->
       {x, Enum.map(y, &set_one/1) |> Enum.join(", ")}
-    end) }
+    end)
   end
   defp set_one({x, y}) do
     "#{to_string x} += #{Cypher.set_values(y)}"
@@ -165,14 +172,15 @@ defmodule Callisto.Query do
 
 
   """
-  def delete(q=%Query{}, detach: v) when is_list(v) do
-    do_delete(q, %{detach: v})
+  def delete(v), do: delete(%Query{}, v)
+  def delete(query=%Query{}, detach: v) when is_list(v) do
+    do_delete(query, %{detach: v})
   end
-  def delete(q=%Query{}, detach: v), do: delete(q, detach: [v])
-  def delete(q=%Query{}, v) when is_list(v) != true, do: delete(q, [v])
-  def delete(q=%Query{}, v), do: do_delete(q, v)
-  defp do_delete(q=%Query{}, v) do
-    %{q | set: nil, delete: v}
+  def delete(query=%Query{}, detach: v), do: delete(query, detach: [v])
+  def delete(query=%Query{}, v) when is_list(v) != true, do: delete(query, [v])
+  def delete(query=%Query{}, v), do: do_delete(query, v)
+  defp do_delete(query=%Query{}, v) do
+    %Query{delete: v, piped_queries: append_query(query)}
   end
 
   # Set the return hash -- should be variable name => type (or nil)
@@ -203,12 +211,13 @@ defmodule Callisto.Query do
       "RETURN x, y"
 
   """
+  def returning(clause), do: returning(%Query{}, clause)
   def returning(query=%Query{}, kwlist) when is_list(kwlist) do
     clause = case Keyword.keyword?(kwlist) do
                true -> kwlist
                _ -> Enum.map(kwlist, fn x -> {x, nil} end)
              end
-    %{query | return: clause}
+    %Query{return: clause, piped_queries: append_query(query)}
   end
   def returning(query=%Query{}, hash) when is_map(hash) do
     returning(query, Map.to_list(hash))
@@ -223,30 +232,55 @@ defmodule Callisto.Query do
   end
 
   # Order clause only accepts string or nil.
+  def order(clause), do: order(%Query{}, clause)
   def order(query=%Query{}, clause) when is_binary(clause) or is_nil(clause) do
-    %{query | order: clause}
+    %Query{order: clause, piped_queries: append_query(query)}
   end
 
   # Limiter only accepts integers or nil
+  def limit(lim), do: limit(%Query{}, lim)
   def limit(query=%Query{}, lim) when is_integer(lim) or is_nil(lim) do
-    %{query | limit: lim}
+    %Query{limit: lim, piped_queries: append_query(query)}
   end
 
+  # Load piped queries into an attribute.
+  defp append_query(query) do
+    List.insert_at(query.piped_queries, -1, query)
+  end
 end
 
 defimpl String.Chars, for: Callisto.Query do
   def to_string(q) do
-    [match(q.match),
-     merge(q.merge),
-     create(q.create),
-     where(q.where),
-     set(q.set),
-     delete(q.delete),
-     return(q.return),
-     order(q.order),
-     limit(q.limit)]
+    parse_chained_queries(q) <> do_to_string(q)
+  end
+
+  defp do_to_string(q) do
+    [
+      match(q.match),
+      merge(q.merge),
+      create(q.create),
+      where(q.where),
+      set(q.set),
+      delete(q.delete),
+      return(q.return),
+      order(q.order),
+      limit(q.limit),
+    ]
     |> Enum.reject(&is_nil/1)
     |> Enum.join(" ")
+  end
+
+  defp parse_chained_queries(q) do
+    cond do
+      Enum.count(q.piped_queries) > 1 ->
+        clause = q.piped_queries
+          |> List.delete_at(0)
+          |> Enum.map(&do_to_string/1)
+          |> Enum.join("\n")
+        clause <> "\n"
+      true ->
+        ""
+    end
   end
 
   defp match(nil), do: nil
@@ -262,7 +296,7 @@ defimpl String.Chars, for: Callisto.Query do
     Enum.map(clause, fn({x,y}) ->
       {(Atom.to_string(x) |> String.upcase |> String.replace("_", " ")), y}
     end)
-    |> Enum.map(fn({x,y}) -> 
+    |> Enum.map(fn({x,y}) ->
       Enum.join([x,y], " SET ")
     end)
     |> Enum.join(" ")
@@ -285,4 +319,3 @@ defimpl String.Chars, for: Callisto.Query do
     "RETURN #{Keyword.keys(hash) |> Enum.join(", ") }"
   end
 end
-
