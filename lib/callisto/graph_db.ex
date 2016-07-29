@@ -132,7 +132,7 @@ defmodule Callisto.GraphDB do
       %Query{match: "(v:Foo)"} |> Query.returning(v: MyApp.Foo)
       |> GraphDB.query(fn(row) -> Enum.map(row, &(&1["v"])) end)
   """
-  @callback query(module, String.t | struct, fun | nil) :: tuple
+  @callback query(String.t | struct, fun | nil) :: tuple
 
   @doc ~S"""
     Runs an arbitrary Cypher query against Neo4j.  Can take a straight string
