@@ -48,16 +48,28 @@ defmodule Callisto.Query do
     Works as match/2, but will mix with MERGE keyword.  Note that Cypher
     permits MATCH and MERGE to be used together in some contructs.
 
-      # iex> %Query{} |> Query.merge(x: Vertex.cast(Medicine, %{name: "foo"})) |> to_string
-      "MERGE (x:Disease { name: 'foo' })"
+    iex> %Query{} |> Query.merge(x: Vertex.cast("Foo", %{name: "foo"})) |> to_string
+    "MERGE (x:Foo {name: 'foo'})"
+
+    iex> %Query{} |> Query.merge("foo") |> to_string
+    "MERGE foo"
+
+    iex> %Query{} |> Query.merge(x: Vertex.cast("Foo", %{name: "zoo"}), y: Vertex.cast("Baz", %{name: "bar"})) |> to_string
+    "MERGE (x:Foo {name: 'zoo'})
+    MERGE (y:Baz {name: 'bar'})"
   """
   def merge(pattern), do: merge(%Query{}, pattern)
   def merge(query=%Query{}, pattern) when is_binary(pattern) do
     %Query{merge: pattern, piped_queries: append_query(query)}
   end
-  def merge(query=%Query{}, hash) when is_map(hash) or is_list(hash) do
+  def merge(query=%Query{}, hash) when is_map(hash) do
     pattern = Enum.map(hash, fn{k, v} -> Cypher.to_cypher(v, k) end)
               |> Enum.join(", ")
+    merge(query, pattern)
+  end
+  def merge(query=%Query{}, list) when is_list(list) do
+    pattern = Enum.map(list, fn{k, v} -> "MERGE "<>Cypher.to_cypher(v, k) end)
+              |> Enum.join("\n")
     merge(query, pattern)
   end
 
@@ -286,7 +298,12 @@ defimpl String.Chars, for: Callisto.Query do
   defp match(nil), do: nil
   defp match(clause), do: "MATCH #{clause}"
   defp merge(nil), do: nil
-  defp merge(clause), do: "MERGE #{clause}"
+  defp merge("MERGE "<>clause) do
+    "MERGE #{clause}"
+  end
+  defp merge(clause) do
+    "MERGE #{clause}"
+  end
   defp create(nil), do: nil
   defp create(clause), do: "CREATE #{clause}"
   defp where(nil), do: nil
