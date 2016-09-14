@@ -22,22 +22,18 @@ defmodule Callisto.Cypher do
     Vertex.cast([], Map.new(x))
     |> to_cypher(name)
   end
-  
+
 
   @doc ~S"""
     Generates the common "matching" criteria for Cypher.  The only real
     difference between Vertex and Edge matching is whether the matching
-    criteria is surrounded by parens (Vertex) or brackets (Edge).  We do
-    one sneaky thing here, though -- if a property has the :id key, we
-    ignore all other other properties, and presume the ID is sufficient to
-    find the correct object(s).
+    criteria is surrounded by parens (Vertex) or brackets (Edge).
 
       iex> Cypher.matcher("x", "Foo", %{id: 42, cereal: "BooBerry"})
-      "x:Foo {id: 42}"
+      "x:Foo {id: 42, cereal: 'BooBerry'}"
   """
   def matcher(name, labels, props) when is_list(labels) != true,
       do: matcher(name, [labels], props)
-  def matcher(name, labels, %{id: id}), do: do_matcher(name, labels, %{id: id})
   def matcher(name, labels, props), do: do_matcher(name, labels, props)
   defp do_matcher(name, labels, props) do
     ["#{name}#{labels_suffix(labels)}", set_values(props)]
@@ -76,6 +72,7 @@ defmodule Callisto.Cypher do
 
     NOTE:  If a value is nil, will convert to NULL; if you don't want nil
            values escaped to NULL, use set_not_nil_values
+           id key will be in the front
 
       iex> Cypher.set_values(x: 42, y: "biff", nothing: nil)
       "{nothing: NULL, x: 42, y: 'biff'}"
@@ -84,9 +81,11 @@ defmodule Callisto.Cypher do
       ""
   """
   def set_values(hash) when is_map(hash) do
-    Enum.map_join(hash, ", ", fn({k,v}) ->
+    Enum.map(hash, fn({k,v}) ->
       "#{to_string(k)}: #{escaped_quote(v)}"
     end)
+    |> Enum.sort_by(fn(a) -> String.match?(a, ~r/^id: /) end, &>=/2)
+    |> Enum.join(", ")
     |> case do
       "" -> ""
       stuff -> "{#{stuff}}"
@@ -112,4 +111,3 @@ defmodule Callisto.Cypher do
   end
 
 end
-
