@@ -33,6 +33,20 @@ defmodule Callisto.VertexTest do
     assert Vertex.to_cypher(vert) == "(v {foo: 42})"
   end
 
+  test "can take keywords" do
+    vert = Vertex.new(Medicine, name: "Flubberanate", dose: "20")
+    expected_cypher = "(v:Medicine {dose: 20, efficacy: 0.9, is_bitter: false, name: 'Flubberanate'})"
+    actual_cypher = Vertex.to_cypher(vert)
+    assert expected_cypher == actual_cypher
+  end
+
+  test "can take keywords with id present" do
+    vert = Vertex.new(Medicine, id: "1000", name: "Flubberanate", dose: "20")
+    expected_cypher = "(v:Medicine {id: '1000', dose: 20, efficacy: 0.9, is_bitter: false, name: 'Flubberanate'})"
+    actual_cypher = Vertex.to_cypher(vert)
+    assert expected_cypher == actual_cypher
+  end
+
   test "converts only the hash keys that are fields" do
     vert = Vertex.new(Medicine, %{"foo" => 42, "name" => "flubber"})
     assert %{"foo" => foo, name: name} = vert.props
@@ -79,6 +93,14 @@ defmodule Callisto.VertexTest do
     assert vertex.props == expected_props
   end
 
+  test "converts defined property keys from strings to atoms" do
+    attributes = %{"name" => "Flamiacin"}
+    expected_props = %{name: "Flamiacin", dose: 100, duration: 1, efficacy: 0.9, is_bitter: false}
+    labels = [Medicine, Treatment]
+    vertex = Vertex.new(labels, attributes)
+    assert vertex.props == expected_props
+  end
+
   test "supports mix of string and property labels" do
     attributes = %{name: "Flamiacin"}
     expected_props = %{name: "Flamiacin", dose: 100, efficacy: 0.9, is_bitter: false}
@@ -92,7 +114,7 @@ defmodule Callisto.VertexTest do
     test "Properties that define id as UUID will auto-assign value unless set" do
       defmodule AutoID do
         use Callisto.Properties
-        properties id: :uuid do 
+        properties id: :uuid do
           field :thing, :string
         end
       end
@@ -101,7 +123,7 @@ defmodule Callisto.VertexTest do
 
       v = Vertex.new(AutoID)
       assert v.id, inspect(v)
-      
+
       %Vertex{id: id, props: props} = Vertex.new(AutoID, id: "foo")
       assert props.id == "foo"
       assert id == "foo"
@@ -121,7 +143,7 @@ defmodule Callisto.VertexTest do
       assert v.id == "foo", inspect(v)
 
       v = Vertex.new(FuncID, id: "bar")
-      assert v.id == "bar", inspect(v)        
+      assert v.id == "bar", inspect(v)
     end
   end
 
