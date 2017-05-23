@@ -78,7 +78,7 @@
   But that's where Callisto.Query comes in -- it's intended to represent a query as component parts, which can be reworked over time.  It's also ready to automagically convert Vertex and Edge records into match constructs:
 
   ```elixir
-  alias Callisto{Query, Vertex}
+  alias Callisto.{Query, Vertex}
   matcher = Vertex.cast("Foo", id: 42)
   query = %Query{}
           |> Query.match(vert: matcher)
@@ -131,11 +131,11 @@
 ## Running tests
 
   To run tests use `mix test` (to run once and exit) or `mix test.watch` (to
-  run and wait for changes, then repeat, see https://hex.pm/packages/mix_test_watch 
+  run and wait for changes, then repeat, see https://hex.pm/packages/mix_test_watch
 
   To run tests that generate coverage reports, use `mix test --cover`.  By default HTML-based reports are written to the the `cover` folder, and text-based summaries are written to console.
 
-  
+
 
 ## Copyright and License
 
